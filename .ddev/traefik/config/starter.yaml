@@ -1,0 +1,123 @@
+#ddev-generated
+# If you remove the ddev-generated line above you
+# are responsible for maintaining this file. DDEV will not then
+# update it, for example if you add `additional_hostnames`, etc.
+
+http:
+  routers:
+    starter-web-80-http:
+      entrypoints:
+        - http-80
+      rule: HostRegexp(`^starter\.ddev\.site$`)
+      
+      service: "starter-web-80"
+      tls: false
+      # middlewares:
+      #   - "starter-redirectHttps"
+    starter-web-8025-http:
+      entrypoints:
+        - http-8025
+      rule: HostRegexp(`^starter\.ddev\.site$`)
+      
+      service: "starter-web-8025"
+      tls: false
+      # middlewares:
+      #   - "starter-redirectHttps"
+    starter-web-3000-http:
+      entrypoints:
+        - http-3001
+      rule: HostRegexp(`^starter\.ddev\.site$`)
+      
+      service: "starter-web-3000"
+      tls: false
+      # middlewares:
+      #   - "starter-redirectHttps"
+    starter-xhgui-80-http:
+      entrypoints:
+        - http-8143
+      rule: HostRegexp(`^starter\.ddev\.site$`)
+      
+      service: "starter-xhgui-80"
+      tls: false
+      # middlewares:
+      #   - "starter-redirectHttps"
+    
+    
+    
+    
+    starter-web-80-https:
+      entrypoints:
+        - http-443
+      rule: HostRegexp(`^starter\.ddev\.site$`)
+      
+      service: "starter-web-80"
+      
+      tls: true
+      
+    starter-web-8025-https:
+      entrypoints:
+        - http-8026
+      rule: HostRegexp(`^starter\.ddev\.site$`)
+      
+      service: "starter-web-8025"
+      
+      tls: true
+      
+    starter-web-3000-https:
+      entrypoints:
+        - http-3000
+      rule: HostRegexp(`^starter\.ddev\.site$`)
+      
+      service: "starter-web-3000"
+      
+      tls: true
+      
+    
+    starter-xhgui-80-https:
+      entrypoints:
+        - http-8142
+      rule: HostRegexp(`^starter\.ddev\.site$`)
+      
+      service: "starter-xhgui-80"
+      
+      tls: true
+      
+    
+
+  middlewares:
+    starter-redirectHttps:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+  services:
+    starter-web-80:
+      loadbalancer:
+        servers:
+          - url: http://ddev-starter-web:80
+        
+    starter-web-8025:
+      loadbalancer:
+        servers:
+          - url: http://ddev-starter-web:8025
+        
+    starter-web-3000:
+      loadbalancer:
+        servers:
+          - url: http://ddev-starter-web:3000
+        
+    
+    
+    
+    starter-xhgui-80:
+      loadbalancer:
+        servers:
+          - url: http://ddev-starter-xhgui:80
+        
+    
+    
+
+tls:
+  certificates:
+    - certFile: /mnt/ddev-global-cache/traefik/certs/starter.crt
+      keyFile: /mnt/ddev-global-cache/traefik/certs/starter.key

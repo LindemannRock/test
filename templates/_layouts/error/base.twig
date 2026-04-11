@@ -1,0 +1,14 @@
+{% extends '_layouts/base' %}
+
+{% block content %}
+	<div class="mx-auto max-w-xl px-4 py-24 text-center">
+		<h1 class="mb-4 text-3xl font-bold text-gray-900">{{ errorHeading }}</h1>
+		<p class="mb-8 text-base text-gray-600">{{ errorText }}</p>
+		<a
+			href="{{ siteUrl }}"
+			class="inline-flex items-center rounded-btn bg-brand px-6 py-3 text-sm font-medium text-white transition hover:bg-brand-dark"
+		>
+			{{ 'Back to homepage'|t(primaryTranslationCategory) }}
+		</a>
+	</div>
+{% endblock %}

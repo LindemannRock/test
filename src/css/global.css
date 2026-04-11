@@ -1,0 +1,73 @@
+@import 'tailwindcss';
+
+@source '../../templates/**/*.twig';
+@source '../../templates/**/*.html';
+
+@theme {
+	/* Breakpoints */
+	--breakpoint-*: initial;
+	--breakpoint-xs: 375px;
+	--breakpoint-sm: 640px;
+	--breakpoint-md: 768px;
+	--breakpoint-lg: 1024px;
+	--breakpoint-xl: 1280px;
+	--breakpoint-2xl: 1536px;
+	--breakpoint-3xl: 1600px;
+	--breakpoint-4xl: 1920px;
+
+	/* Brand Colors — replace with project colors */
+	--color-brand: #1a1a1a;
+	--color-brand-light: #333333;
+	--color-brand-dark: #000000;
+	--color-accent: #2563eb;
+	--color-accent-light: #3b82f6;
+	--color-accent-dark: #1d4ed8;
+
+	/* Typography */
+	--font-sans: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+		'Segoe UI Symbol', 'Noto Color Emoji';
+	--font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+
+	/* Font Sizes */
+	--text-xs: 0.75rem;
+	--text-sm: 0.875rem;
+	--text-base: 1rem;
+	--text-lg: 1.125rem;
+	--text-xl: 1.25rem;
+	--text-2xl: 1.5rem;
+	--text-3xl: 1.875rem;
+	--text-4xl: 2.25rem;
+	--text-5xl: 3rem;
+	--text-6xl: 3.75rem;
+
+	/* Border Radius */
+	--radius-btn: 0.375rem;
+
+	/* Social Brand Colors */
+	--color-brands-facebook: #1877f2;
+	--color-brands-twitter: #14171a;
+	--color-brands-instagram: #405de6;
+	--color-brands-linkedin: #0a66c2;
+	--color-brands-youtube: #ff0000;
+	--color-brands-tiktok: #ff0050;
+}
+
+/* Custom font-face declarations — add project fonts here */
+/* Example:
+@font-face {
+	font-family: 'Project Sans';
+	src: url('/dist/assets/fonts/ProjectSans-Regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+*/
+
+/* RTL utilities */
+[dir='rtl'] {
+	--direction: rtl;
+}
+
+[dir='ltr'] {
+	--direction: ltr;
+}

@@ -1,0 +1,36 @@
+{# -- Site Footer -- #}
+<footer
+	class="border-t border-gray-200 bg-gray-50"
+	x-show="!$store.session.hideFooter"
+>
+	<div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+		<div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+			{# Footer Navigation #}
+			{% for node in _globals.nav.footer %}
+				<div>
+					<h3 class="mb-3 text-sm font-semibold text-gray-900">{{ node.title }}</h3>
+					{% if node.children|length %}
+						<ul class="space-y-2">
+							{% for child in node.children %}
+								<li>
+									<a
+										href="{{ child.url }}"
+										class="text-sm text-gray-600 transition hover:text-brand"
+										{% if child.newWindow %}target="_blank" rel="noopener"{% endif %}
+									>
+										{{ child.title }}
+									</a>
+								</li>
+							{% endfor %}
+						</ul>
+					{% endif %}
+				</div>
+			{% endfor %}
+		</div>
+
+		{# Copyright #}
+		<div class="mt-8 border-t border-gray-200 pt-8 text-center text-sm text-gray-500">
+			&copy; {{ now|date('Y') }} {{ siteName }}. {{ 'All rights reserved.'|t(primaryTranslationCategory) }}
+		</div>
+	</div>
+</footer>

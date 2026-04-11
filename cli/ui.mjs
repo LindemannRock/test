@@ -1,0 +1,107 @@
+/**
+ * Presentation helpers for the CLI — intro, configuration summary, outro.
+ */
+
+import * as p from '@clack/prompts';
+import pc from 'picocolors';
+
+export function intro() {
+	console.log('');
+	p.intro(pc.bgCyan(pc.black(' LindemannRock — Craft CMS Starter ')));
+}
+
+export function showConfigurationSummary({ project, bilingual, useRedis, selectedLr, selectedTp, selectedHosting }) {
+	const rows = [
+		['Project', project.name],
+		['Site name', project.description],
+		['Timezone', project.timezone],
+		['Language', project.language],
+		['CP trigger', `/${project.cpTrigger || 'cms'}`],
+		['Admin', project.adminEmail],
+		['System email', project.systemEmail],
+		['Bilingual', bilingual ? 'Yes (EN/AR)' : 'No (EN only)'],
+		['Cache', useRedis ? 'Redis' : 'File (default)'],
+		['LR Plugins', selectedLr.length ? selectedLr.map((pl) => pl.label).join(', ') : 'None'],
+		['Plugins', selectedTp.length ? selectedTp.map((pl) => pl.label).join(', ') : 'None'],
+		['Hosting', selectedHosting.label],
+	];
+
+	// Pad each label to the width of the longest so all values line up
+	const labelWidth = Math.max(...rows.map(([label]) => label.length));
+	const labelGap = 2;
+	const indentLength = labelWidth + labelGap;
+	const indent = ' '.repeat(indentLength);
+
+	// Box overhead: clack's note draws borders + padding, and there's an outer
+	// "│  " prefix on every clack block. ~10 chars of overhead total.
+	const terminalWidth = process.stdout.columns || 80;
+	const boxOverhead = 10;
+	// Cap between 30 (narrow terminals) and 80 (so it's never absurdly wide)
+	const valueWidth = Math.max(30, Math.min(80, terminalWidth - boxOverhead - indentLength));
+
+	p.note(
+		rows.map(([label, value]) => {
+			const wrapped = wrapValue(value, valueWidth, indent);
+			return `${pc.bold(label.padEnd(labelWidth))}  ${wrapped}`;
+		}).join('\n'),
+		'Configuration',
+	);
+}
+
+/**
+ * Wrap a value so no line exceeds maxWidth. Breaks at commas first (for
+ * plugin lists), then at spaces as fallback. Continuation lines are prefixed
+ * with `indent` so they align under the value column.
+ */
+function wrapValue(value, maxWidth, indent) {
+	if (value.length <= maxWidth) return value;
+
+	// Prefer comma breaks for plugin lists
+	if (value.includes(', ')) {
+		const parts = value.split(', ');
+		const lines = [];
+		let current = '';
+		for (let i = 0; i < parts.length; i++) {
+			const piece = parts[i] + (i < parts.length - 1 ? ',' : '');
+			const candidate = current ? `${current} ${piece}` : piece;
+			if (candidate.length <= maxWidth) {
+				current = candidate;
+			} else {
+				if (current) lines.push(current);
+				current = piece;
+			}
+		}
+		if (current) lines.push(current);
+		return lines.join(`\n${indent}`);
+	}
+
+	// Fallback: break on spaces
+	const words = value.split(' ');
+	const lines = [];
+	let current = '';
+	for (const word of words) {
+		const candidate = current ? `${current} ${word}` : word;
+		if (candidate.length <= maxWidth) {
+			current = candidate;
+		} else {
+			if (current) lines.push(current);
+			current = word;
+		}
+	}
+	if (current) lines.push(current);
+	return lines.join(`\n${indent}`);
+}
+
+export function outro({ project }) {
+	const siteUrl = `https://${project.name}.ddev.site`;
+	const cpUrl = `${siteUrl}/${project.cpTrigger || 'cms'}`;
+
+	console.log('');
+	p.outro(
+		pc.green(pc.bold('Project ready!')) + '\n\n' +
+		`  ${pc.bold('Site')}     ${pc.cyan(siteUrl)}\n` +
+		`  ${pc.bold('Admin')}    ${pc.cyan(cpUrl)}\n` +
+		`  ${pc.bold('Login')}    ${project.adminEmail}\n\n` +
+		`  ${pc.dim('Next:')} Run ${pc.bold('make dev')} to start developing\n`
+	);
+}

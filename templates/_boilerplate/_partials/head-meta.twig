@@ -1,0 +1,11 @@
+{# -- Basic meta tags -- #}
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, viewport-fit=cover'>
+
+{# -- PWA iOS meta tags -- #}
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+{# -- Favicons -- #}
+{% set distDir = '@webroot/dist' %}
+{{ craft.vite.inline(distDir ~ '/assets/brand/favicons/' ~ currentLang ~ '/webapp.html') }}

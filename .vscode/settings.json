@@ -1,0 +1,7 @@
+{
+	"intelephense.environment.phpVersion": "8.3",
+	"editor.formatOnSave": true,
+	"prettier.configPath": "./.prettierrc.json",
+	"prettier.bracketSameLine": true,
+	"prettier.documentSelectors": ["**/*.{jsx,html,twig,css,scss}"]
+}

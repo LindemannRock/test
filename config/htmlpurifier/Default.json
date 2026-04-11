@@ -1,0 +1,9 @@
+{
+	"Attr.AllowedFrameTargets": [
+		"_blank"
+	],
+	"Attr.EnableID": true,
+	"HTML.AllowedComments": [
+		"pagebreak"
+	]
+}

@@ -1,0 +1,17 @@
+{# Entry Router #}
+{# Resolves the most specific template first, falling back to defaults:     #}
+{# 1. entry/{sectionHandle}/{typeHandle}.twig                               #}
+{# 2. entry/{sectionHandle}/default.twig                                    #}
+
+{% if entry.section.handle == 'error404' %}
+	{% include 'errors/404' %}
+{% elseif entry.section.handle == 'errorGeneral' %}
+	{% include 'errors/error' %}
+{% elseif entry.section.handle == 'errorOffline' %}
+	{% include 'errors/offline' %}
+{% else %}
+	{% include [
+		'entry/' ~ entry.section.handle ~ '/' ~ entry.type.handle,
+		'entry/' ~ entry.section.handle ~ '/default'
+	] %}
+{% endif %}

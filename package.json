@@ -1,0 +1,66 @@
+{
+	"name": "craft-starter",
+	"version": "1.0.0",
+	"description": "Opinionated Craft CMS 5 starter by LindemannRock — interactive CLI, Tailwind 4, TypeScript, Alpine.js.",
+	"type": "module",
+	"author": {
+		"name": "Bilal Harry Lindemann",
+		"email": "hello@lindemannrock.com",
+		"url": "https://lindemannrock.com"
+	},
+	"company": {
+		"name": "LindemannRock",
+		"url": "https://lindemannrock.com"
+	},
+	"homepage": "https://github.com/LindemannRock/craft-starter",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/LindemannRock/craft-starter.git"
+	},
+	"bugs": {
+		"url": "https://github.com/LindemannRock/craft-starter/issues"
+	},
+	"private": true,
+	"license": "MIT",
+	"engines": {
+		"node": ">=22.0.0",
+		"npm": ">=10.0.0"
+	},
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"generate:favicons": "node generate-favicons.mjs"
+	},
+	"devDependencies": {
+		"@destination/prettier-plugin-twig": "^1.5.0",
+		"@tailwindcss/vite": "^4.1.11",
+		"@types/node": "^24.0.10",
+		"npm-check": "^6.0.1",
+		"prettier": "^3.6.2",
+		"prettier-plugin-organize-attributes": "^1.0.0",
+		"prettier-plugin-tailwindcss": "^0.6.13",
+		"rimraf": "^6.0.1",
+		"rollup-plugin-copy": "^3.5.0",
+		"rollup-plugin-critical": "^1.0.15",
+		"rollup-plugin-visualizer": "^6.0.3",
+		"svgo": "^4.0.0",
+		"swiper": "^11.2.10",
+		"tailwindcss": "^4.1.11",
+		"terser": "^5.43.1",
+		"typescript": "^5.8.3",
+		"vite": "^7.0.2",
+		"vite-plugin-compression": "^0.5.1",
+		"vite-plugin-manifest-sri": "^0.2.0",
+		"vite-plugin-restart": "^0.4.2"
+	},
+	"dependencies": {
+		"@alpinejs/collapse": "^3.14.9",
+		"@justinribeiro/lite-youtube": "^1.8.2",
+		"alpinejs": "^3.14.9",
+		"lazysizes": "^5.3.2",
+		"lucide": "^0.525.0",
+		"mmenu-js": "^9.3.0",
+		"sharp": "^0.34.2",
+		"tiny-cookie": "^2.5.1"
+	}
+}

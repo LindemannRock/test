@@ -1,0 +1,24 @@
+{% extends '_boilerplate/_layouts/base-html-layout.twig' %}
+
+{% block htmlTag %}
+	{{ parent()|attr({ class: "theme-light" }) }}
+{% endblock htmlTag %}
+
+{% block headCss %}
+	{% include '_layouts/base-fonts.twig' %}
+{% endblock headCss %}
+
+{% block bodyTag %}
+	{{ parent()|attr({ class: "bg-white selection:bg-brand selection:text-white" }) }}
+{% endblock bodyTag %}
+
+{% block bodyHtml %}
+	<div id='my-page'>
+		{% include '_layouts/header.twig' %}
+
+		{# -- Page content -- #}
+		{% block content %}{% endblock %}
+
+		{% include '_layouts/footer.twig' %}
+	</div>
+{% endblock bodyHtml %}

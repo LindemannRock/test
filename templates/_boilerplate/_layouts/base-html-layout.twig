@@ -1,0 +1,49 @@
+{% extends "_boilerplate/_layouts/base-web-layout.twig" %}
+{% block htmlTag %}
+<html lang='{{ lang }}' dir="{% if lang == 'ar' %}rtl{% else %}ltr{% endif %}">
+{% endblock htmlTag %}
+
+{% block headContent %}
+	{# -- Meta tags -- #}
+	{% block headMeta %}
+		<meta name="csrf-param" content="{{ craft.app.request.csrfParam }}">
+		<meta name="csrf-token" content="{{ craft.app.request.csrfToken }}">
+	{% endblock headMeta %}
+
+	{# -- Link tags -- #}
+	{% block headLinks %}
+	{% endblock headLinks %}
+
+	{# -- Inline JS -- #}
+	{% include "_boilerplate/_partials/head-js.twig" %}
+
+	{# -- JS before </head> -- #}
+	{% block headJs %}
+	{% endblock headJs %}
+
+	{# -- Alpine cloak fix -- #}
+	<style>
+		[v-cloak] { display: none !important; }
+		[x-cloak] { display: none !important; }
+	</style>
+
+	{# -- CSS before </head> -- #}
+	{% block headCss %}
+	{% endblock headCss %}
+
+	{# -- Critical CSS -- #}
+	{% include "_boilerplate/_partials/critical-css.twig" %}
+
+{% endblock headContent %}
+
+{% block bodyContent %}
+	{% block bodyHtml %}
+	{% endblock bodyHtml %}
+
+	{# -- Site-wide JS -- #}
+	{% include "_boilerplate/_partials/body-js.twig" %}
+
+	{# -- JS before </body> -- #}
+	{% block bodyJs %}
+	{% endblock bodyJs %}
+{% endblock bodyContent %}

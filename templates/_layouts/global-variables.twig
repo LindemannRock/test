@@ -1,0 +1,82 @@
+{% apply spaceless %}
+
+{# -- General global variables -- #}
+{% set element = (category ?? entry ?? null) %}
+{% set lang = craft.app.language[:2] %}
+{% set gaTrackingId = getenv('GA_TRACKING_ID') %}
+
+{# -- Site and language variables -- #}
+{% set siteHandle = currentSite.handle %}
+{% set siteId = currentSite.id %}
+{% set siteUrl = currentSite.baseUrl %}
+{% set siteLang = currentSite.language %}
+{% set isArabic = siteLang == 'ar' %}
+{% set isEnglish = siteLang == 'en' %}
+{% set currentLang = siteLang %}
+
+{# -- Site names from environment variables -- #}
+{% set siteNameEn = getenv('PRIMARY_SITE_NAME_EN') ?: 'Site Name' %}
+{% set siteNameAr = getenv('PRIMARY_SITE_NAME_AR') ?: 'اسم الموقع' %}
+{% set siteName = isArabic ? siteNameAr : siteNameEn %}
+
+{# -- Language switcher variables -- #}
+{% set otherSiteHandle = isArabic ? 'en' : 'ar' %}
+{% set otherSite = craft.app.sites.getSiteByHandle(otherSiteHandle) %}
+{% set enSite = craft.app.sites.getSiteByHandle('en') %}
+{% set arSite = craft.app.sites.getSiteByHandle('ar') %}
+
+{# -- URL segments -- #}
+{% set segments = craft.app.request.segments %}
+{% set fullPath = segments|join('/') %}
+
+{# -- Environment detection -- #}
+{% set environment = getenv('CRAFT_ENVIRONMENT') %}
+{% set isDev = environment == 'dev' %}
+{% set isStaging = environment == 'staging' %}
+{% set isProduction = environment == 'production' %}
+
+{# -- Navigation queries (centralized for performance) -- #}
+{# Guarded so templates don't crash on fresh install. Create 'main' and 'footer' nav handles in the CP, or replace with your own. #}
+{% set mainMenuNodes = [] %}
+{% set footerNav = [] %}
+{% if craft.app.plugins.isPluginInstalled('navigation') %}
+	{% set mainMenuNodes = craft.navigation.nodes('main').level(1).all() ?? [] %}
+	{% set footerNav = craft.navigation.nodes('footer').level(1).with(['children']).all() ?? [] %}
+{% endif %}
+
+{# -- Translation category -- #}
+{% set primaryTranslationCategory = getenv('TRANSLATION_CATEGORY_PRIMARY') ?: 'site' %}
+{% set formTranslationCategory = getenv('TRANSLATION_CATEGORY_FORM') ?: 'formie' %}
+
+{# -- Global variables object (available in all templates) -- #}
+{% set _globals = {
+	site: {
+		name: siteName,
+		nameEn: siteNameEn,
+		nameAr: siteNameAr,
+		handle: siteHandle,
+		lang: siteLang,
+		isArabic: isArabic,
+		isEnglish: isEnglish,
+		url: siteUrl,
+	},
+	env: {
+		isDev: isDev,
+		isStaging: isStaging,
+		isProduction: isProduction,
+	},
+	nav: {
+		main: mainMenuNodes,
+		footer: footerNav,
+	},
+	translation: {
+		primary: primaryTranslationCategory,
+		form: formTranslationCategory,
+	},
+	breadcrumbDefaults: {
+		hideBreadcrumbs: false,
+	},
+} %}
+
+{% endapply %}
+{% block htmlPage %}{% endblock %}

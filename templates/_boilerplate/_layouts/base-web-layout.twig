@@ -1,0 +1,19 @@
+{% extends "_layouts/global-variables.twig" %}
+{%- block htmlPage -%}
+<!DOCTYPE html>
+{% block htmlTag %}
+	<html lang='{{ lang }}' dir="{% if lang == 'ar' %}rtl{% else %}ltr{% endif %}">
+{% endblock htmlTag %}
+	{% block headTag %}
+		<head>
+	{% endblock headTag %}
+		{% include "_boilerplate/_partials/head-meta.twig" %}
+		{% block headContent %}{% endblock headContent %}
+	</head>
+	{% block bodyTag %}
+		<body onload='' class=''>
+	{% endblock bodyTag %}
+		{% block bodyContent %}{% endblock bodyContent %}
+	</body>
+</html>
+{%- endblock htmlPage -%}

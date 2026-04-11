@@ -1,0 +1,168 @@
+/**
+ * .env file management.
+ *
+ * The source template lives at cli/templates/env.example. The CLI generates
+ * a fresh .env at the project root from that template each time `make create`
+ * runs, then applies the user's selected values using key-based replacement.
+ *
+ * Craft-owned settings (devMode, timezone, CP trigger, etc.) use the CRAFT_*
+ * env var convention — Craft auto-reads these without needing code in
+ * general.php. See cli/templates/env.example for the full list.
+ */
+
+import fs from 'fs';
+import path from 'path';
+import { ROOT, CLI_DIR } from '../paths.mjs';
+import { generateSecurityKey, generateAppId, generateIpSalt } from '../utils/crypto.mjs';
+
+const ENV_SOURCE = path.join(CLI_DIR, 'templates', 'env.example');
+const ENV_DEST = path.join(ROOT, '.env');
+
+// The template's first comment block is an internal note for LindemannRock
+// devs maintaining the starter — it should NOT appear in the generated .env.
+const HEADER_BLOCK_REGEX = /^# -{3,}[\s\S]*?# -{3,}\n\n?/;
+
+/**
+ * Create a fresh .env from the template and populate it with user values.
+ * Call this ONCE from the orchestrator — all env updates go here.
+ */
+export function generateEnvFile({
+	project,
+	bilingual,
+	servdCredentials,
+	postmarkToken,
+	smtpCredentials,
+	useRedis,
+	selectedLr = [],
+	selectedTp = [],
+}) {
+	// Start from a clean copy of the source template, stripping the internal header
+	let content = fs.readFileSync(ENV_SOURCE, 'utf-8').replace(HEADER_BLOCK_REGEX, '');
+
+	const siteUrlBase = `https://${project.name}.ddev.site`;
+	const siteName = project.description || project.name;
+
+	const updates = {
+		// Craft core — generated fresh each run
+		CRAFT_APP_ID: generateAppId(),
+		CRAFT_SECURITY_KEY: quoted(generateSecurityKey()),
+
+		// Craft general config (auto-read from CRAFT_* prefix)
+		CRAFT_TIMEZONE: project.timezone,
+		CRAFT_CP_TRIGGER: project.cpTrigger || 'cms',
+
+		// System
+		SYSTEM_NAME: quoted(siteName),
+		SYSTEM_SENDER_NAME: quoted(siteName),
+		SYSTEM_EMAIL: project.systemEmail,
+		SYSTEM_EMAIL_REPLY_TO: project.systemEmail,
+
+		// Site URLs (dev only — staging/production are set via the hosting dashboard)
+		PRIMARY_SITE_URL: siteUrlBase,
+		PRIMARY_SITE_URL_EN: `${siteUrlBase}/`,
+		PRIMARY_SITE_NAME_EN: quoted(siteName),
+
+		// Vite dev server
+		VITE_DEV_SERVER_PUBLIC: `${siteUrlBase}:3000/`,
+		VITE_DEV_SERVER_INTERNAL: 'http://localhost:3000/',
+		CRAFT_TEST_TO_EMAIL_ADDRESS: project.adminEmail,
+	};
+
+	// Bilingual — Arabic site URL
+	if (bilingual) {
+		updates.PRIMARY_SITE_URL_AR = `${siteUrlBase}/ar/`;
+		updates.PRIMARY_SITE_NAME_AR = quoted(`${siteName} (AR)`);
+	}
+
+	// Servd credentials
+	if (servdCredentials) {
+		updates.SERVD_PROJECT_SLUG = servdCredentials.slug;
+		updates.SERVD_SECURITY_KEY = servdCredentials.key;
+	}
+
+	// Postmark token
+	if (postmarkToken) {
+		updates.POSTMARK_TOKEN = postmarkToken;
+	}
+
+	// SMTP credentials (e.g. Servd SMTP or any other SMTP provider)
+	if (smtpCredentials) {
+		updates.SMTP_HOSTNAME = smtpCredentials.host;
+		updates.SMTP_PORT = smtpCredentials.port;
+		updates.SMTP_USERNAME = smtpCredentials.username;
+		updates.SMTP_PASSWORD = quoted(smtpCredentials.password);
+		updates.SMTP_USE_AUTH = smtpCredentials.useAuth ? 'true' : 'false';
+	}
+
+	// Apply all scalar updates
+	for (const [key, value] of Object.entries(updates)) {
+		content = setEnvKey(content, key, value);
+	}
+
+	// IP salts for LR plugins — written into their own section under the
+	// template's "LindemannRock plugin salts" header so they aren't appended
+	// at the end of the file.
+	const saltLines = [];
+	for (const pl of [...selectedLr, ...selectedTp]) {
+		if (pl.ipSaltEnv) {
+			saltLines.push(`${pl.ipSaltEnv}=${quoted(generateIpSalt())}`);
+		}
+	}
+
+	if (saltLines.length > 0) {
+		content = content.replace(
+			/(# LindemannRock plugin salts[^\n]*\n# -+\n)/,
+			`$1${saltLines.join('\n')}\n`,
+		);
+	} else {
+		// No IP-salt plugins selected — strip the header section entirely
+		content = content.replace(/\n# -{3,}\n# LindemannRock plugin salts[^\n]*\n# -{3,}\n/, '\n');
+	}
+
+	// Remove bilingual and Redis sections when not needed
+	if (!bilingual) {
+		content = removeSection(content, '# Arabic Site');
+	}
+	if (!useRedis) {
+		content = removeSection(content, '# Redis Cache');
+	}
+
+	// Collapse multiple blank lines left behind by removals
+	content = content.replace(/\n{3,}/g, '\n\n');
+
+	fs.writeFileSync(ENV_DEST, content);
+}
+
+/**
+ * Remove a commented section from .env content — matches `# Section Name`
+ * and all following `KEY=value` lines until the next blank line or new comment.
+ */
+function removeSection(content, header) {
+	const escaped = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	// Match the header line, optional description lines, and all KEY=value lines until blank
+	const regex = new RegExp(`\\n${escaped}[^\\n]*\\n(?:#[^\\n]*\\n)*(?:[A-Z_]+=.*\\n)*`, 'g');
+	return content.replace(regex, '\n');
+}
+
+/**
+ * Replace (or append) a single key in .env content.
+ * Matches the key at the start of a line and rewrites the entire value.
+ * If the key doesn't exist, appends it to the end of the file.
+ */
+export function setEnvKey(content, key, value) {
+	const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const regex = new RegExp(`^${escaped}=.*$`, 'm');
+	const line = `${key}=${value}`;
+
+	if (regex.test(content)) {
+		return content.replace(regex, line);
+	}
+	return content.endsWith('\n') ? content + line + '\n' : content + '\n' + line + '\n';
+}
+
+/**
+ * Wrap a value in double quotes for .env files (use for values with spaces or special chars).
+ */
+export function quoted(value) {
+	return `"${String(value).replace(/"/g, '\\"')}"`;
+}

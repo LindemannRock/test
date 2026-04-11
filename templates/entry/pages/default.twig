@@ -1,0 +1,14 @@
+{% extends '_layouts/base' %}
+
+{% block content %}
+	<main>
+		<div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+			<h1 class="mb-8 text-4xl font-bold text-gray-900">{{ entry.title }}</h1>
+
+			{# Page content — replace with your Matrix/CKEditor field #}
+			{# {% for block in entry.pageContent.all() %}
+				{% include '_partials/blocks/' ~ block.type.handle %}
+			{% endfor %} #}
+		</div>
+	</main>
+{% endblock %}
