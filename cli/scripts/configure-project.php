@@ -104,50 +104,52 @@ if (file_exists($sitesJsonPath)) {
     // The default site created by `craft install` — we'll update it to match the first CLI site
     $defaultSite = $existingSites[0] ?? null;
 
-    // Use the default site group created by craft install — don't create new ones
-    $defaultGroupId = $defaultSite ? $defaultSite->groupId : 1;
+    // Get the default site group UID from the default site
+    $defaultGroupUid = null;
+    if ($defaultSite) {
+        $group = Craft::$app->sites->getGroupById($defaultSite->groupId);
+        $defaultGroupUid = $group ? $group->uid : null;
+    }
 
     foreach ($sitesConfig as $i => $siteData) {
         $handle = $siteData['handle'];
         $language = $siteData['language'];
         $handleUpper = strtoupper($handle);
-        // Use env var references so project config stays portable across environments
         $baseUrl = "\$PRIMARY_SITE_URL_{$handleUpper}";
         $siteName = "\$PRIMARY_SITE_NAME_{$handleUpper}";
 
         if ($i === 0 && $defaultSite) {
-            // Update the default site (created by craft install) with CLI values
-            $defaultSite->handle = $handle;
-            $defaultSite->language = $language;
-            $defaultSite->setBaseUrl($baseUrl);
-            $defaultSite->primary = true;
-            $sitesService->saveSite($defaultSite);
-            // Force env var reference for name — saveSite() resolves $VAR strings
-            $projectConfig->set("sites.{$defaultSite->uid}.name", $siteName);
+            // Update the default site (created by craft install) via project config
+            $uid = $defaultSite->uid;
+            $projectConfig->set("sites.{$uid}", [
+                'handle' => $handle,
+                'language' => $language,
+                'name' => $siteName,
+                'baseUrl' => $baseUrl,
+                'hasUrls' => true,
+                'primary' => true,
+                'enabled' => true,
+                'siteGroup' => $defaultGroupUid,
+                'sortOrder' => $i + 1,
+            ]);
             echo "Updated default site: {$handle} ({$language})\n";
         } else {
             // Check if site with this handle already exists
             $existing = $sitesService->getSiteByHandle($handle);
-            if ($existing) {
-                $existing->language = $language;
-                $existing->setBaseUrl($baseUrl);
-                $sitesService->saveSite($existing);
-                $projectConfig->set("sites.{$existing->uid}.name", $siteName);
-                echo "Updated site: {$handle} ({$language})\n";
-            } else {
-                // Create new site in the default group
-                $site = new \craft\models\Site([
-                    'groupId' => $defaultGroupId,
-                    'handle' => $handle,
-                    'language' => $language,
-                    'primary' => false,
-                    'hasUrls' => true,
-                ]);
-                $site->setBaseUrl($baseUrl);
-                $sitesService->saveSite($site);
-                $projectConfig->set("sites.{$site->uid}.name", $siteName);
-                echo "Created site: {$handle} ({$language})\n";
-            }
+            $uid = $existing ? $existing->uid : \craft\helpers\StringHelper::UUID();
+
+            $projectConfig->set("sites.{$uid}", [
+                'handle' => $handle,
+                'language' => $language,
+                'name' => $siteName,
+                'baseUrl' => $baseUrl,
+                'hasUrls' => true,
+                'primary' => false,
+                'enabled' => true,
+                'siteGroup' => $defaultGroupUid,
+                'sortOrder' => $i + 1,
+            ]);
+            echo ($existing ? "Updated" : "Created") . " site: {$handle} ({$language})\n";
         }
     }
 

@@ -237,6 +237,8 @@ nuke: ## Destroy DDEV + vendor + node_modules + dist + config/project + .env
 	@# Reset DDEV config to starter defaults
 	@sed -i '' 's/^name: .*/name: craft-starter/' .ddev/config.yaml 2>/dev/null || true
 	@sed -i '' 's/^timezone: .*/timezone: Asia\/Dubai/' .ddev/config.yaml 2>/dev/null || true
+	@# Remove scaffolded translations (keep en/ as the base template)
+	@find translations -mindepth 1 -maxdepth 1 -type d ! -name 'en' -exec rm -rf {} + 2>/dev/null || true
 	@# Remove CLI temp files
 	@rm -rf cli/tmp 2>/dev/null || true
 	@# Second-pass retry — catches race conditions with Finder/Spotlight/Mutagen

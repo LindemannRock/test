@@ -12,10 +12,7 @@
 		"craftcms/cms": "^5.9.18",
 		"craftcms/ckeditor": "^5.4.0",
 		"nystudio107/craft-vite": "^5.0.1",
-		"vlucas/phpdotenv": "^5.6.0",
-		"yiisoft/yii2-redis": "^2.1",
-		"craftcms/postmark": "^3.1.0",
-		"servd/craft-asset-storage": "^4.2.4.2"
+		"vlucas/phpdotenv": "^5.6.0"
 	},
 	"require-dev": {
 		"craftcms/generator": "^2.0.0",
