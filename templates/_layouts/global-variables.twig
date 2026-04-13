@@ -3,27 +3,23 @@
 {# -- General global variables -- #}
 {% set element = (category ?? entry ?? null) %}
 {% set lang = craft.app.language[:2] %}
-{% set gaTrackingId = getenv('GA_TRACKING_ID') %}
 
 {# -- Site and language variables -- #}
 {% set siteHandle = currentSite.handle %}
 {% set siteId = currentSite.id %}
 {% set siteUrl = currentSite.baseUrl %}
 {% set siteLang = currentSite.language %}
-{% set isArabic = siteLang == 'ar' %}
-{% set isEnglish = siteLang == 'en' %}
-{% set currentLang = siteLang %}
 
-{# -- Site names from environment variables -- #}
-{% set siteNameEn = getenv('PRIMARY_SITE_NAME_EN') ?: 'Site Name' %}
-{% set siteNameAr = getenv('PRIMARY_SITE_NAME_AR') ?: 'اسم الموقع' %}
-{% set siteName = isArabic ? siteNameAr : siteNameEn %}
+{# -- RTL detection (Arabic, Hebrew, Farsi, Urdu) -- #}
+{% set rtlLanguages = ['ar', 'he', 'fa', 'ur'] %}
+{% set isRtl = siteLang[:2] in rtlLanguages %}
 
-{# -- Language switcher variables -- #}
-{% set otherSiteHandle = isArabic ? 'en' : 'ar' %}
-{% set otherSite = craft.app.sites.getSiteByHandle(otherSiteHandle) %}
-{% set enSite = craft.app.sites.getSiteByHandle('en') %}
-{% set arSite = craft.app.sites.getSiteByHandle('ar') %}
+{# -- Site name from env (pattern: PRIMARY_SITE_NAME_{HANDLE|upper}) -- #}
+{% set siteName = getenv('PRIMARY_SITE_NAME_' ~ siteHandle|upper) ?: getenv('SYSTEM_NAME') ?: currentSite.name %}
+
+{# -- Multi-site: all sites and other sites for language switcher -- #}
+{% set allSites = craft.app.sites.allSites %}
+{% set otherSites = allSites|filter(s => s.id != currentSite.id) %}
 
 {# -- URL segments -- #}
 {% set segments = craft.app.request.segments %}
@@ -52,13 +48,12 @@
 {% set _globals = {
 	site: {
 		name: siteName,
-		nameEn: siteNameEn,
-		nameAr: siteNameAr,
 		handle: siteHandle,
 		lang: siteLang,
-		isArabic: isArabic,
-		isEnglish: isEnglish,
+		isRtl: isRtl,
 		url: siteUrl,
+		allSites: allSites,
+		otherSites: otherSites,
 	},
 	env: {
 		isDev: isDev,

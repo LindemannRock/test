@@ -15,11 +15,11 @@ import pc from 'picocolors';
 import { LR_PLUGINS, THIRD_PARTY_PLUGINS } from './config/plugins.mjs';
 import { promptProject } from './prompts/project.mjs';
 import {
-	promptBilingual,
 	promptLrPlugins,
 	promptThirdPartyPlugins,
 	promptHosting,
 } from './prompts/plugins.mjs';
+import { promptSites } from './prompts/sites.mjs';
 import { promptServdCredentials } from './prompts/servd.mjs';
 import { promptServdEmail } from './prompts/servd-email.mjs';
 import { promptPostmarkToken } from './prompts/postmark.mjs';
@@ -29,7 +29,7 @@ import { updatePackageJson } from './actions/packageJson.mjs';
 import { updateDdevConfig } from './actions/ddev.mjs';
 import { generateEnvFile } from './actions/env.mjs';
 import { writePluginConfigs, cleanUnusedPluginConfigs } from './actions/plugins.mjs';
-import { removeBilingual } from './actions/bilingual.mjs';
+import { scaffoldTranslations, cleanUnusedTranslations } from './actions/sites.mjs';
 import { buildInstallSteps } from './actions/install.mjs';
 import { intro, showConfigurationSummary, outro } from './ui.mjs';
 import fs from 'fs';
@@ -45,8 +45,8 @@ async function collectProject(state) {
 	state.project = await promptProject();
 }
 
-async function collectFeatures(state) {
-	state.bilingual = await promptBilingual();
+async function collectSitesAndFeatures(state) {
+	state.sites = await promptSites(state.project?.description || state.project?.name);
 	state.useRedis = await promptRedis();
 }
 
@@ -134,7 +134,7 @@ async function main() {
 
 	// -- Initial collection --------------------------------------------------
 	await collectProject(state);
-	await collectFeatures(state);
+	await collectSitesAndFeatures(state);
 	await collectPlugins(state);
 	await collectHosting(state);
 
@@ -147,7 +147,7 @@ async function main() {
 			options: [
 				{ value: 'install', label: pc.green('Install with these settings') },
 				{ value: 'project', label: 'Edit project details', hint: 'name, timezone, admin, etc.' },
-				{ value: 'features', label: 'Edit bilingual / Redis' },
+				{ value: 'features', label: 'Edit sites / Redis' },
 				{ value: 'plugins', label: 'Edit plugin selection' },
 				{ value: 'hosting', label: 'Edit hosting / email' },
 				{ value: 'cancel', label: pc.red('Cancel') },
@@ -160,7 +160,7 @@ async function main() {
 
 		// Edit a single section then loop back to the summary
 		if (action === 'project') await collectProject(state);
-		if (action === 'features') await collectFeatures(state);
+		if (action === 'features') await collectSitesAndFeatures(state);
 		if (action === 'plugins') {
 			await collectPlugins(state);
 			// Plugin changes can affect hosting/email logic — re-run hosting too
@@ -169,7 +169,7 @@ async function main() {
 		if (action === 'hosting') await collectHosting(state);
 	}
 
-	const { project, bilingual, useRedis, selectedLr, selectedTp, selectedHosting,
+	const { project, sites, useRedis, selectedLr, selectedTp, selectedHosting,
 		servdCredentials, postmarkToken, smtpCredentials } = state;
 
 	// -- Apply file changes --------------------------------------------------
@@ -188,7 +188,7 @@ async function main() {
 	s.stop('DDEV config updated');
 
 	s.start('Generating .env');
-	generateEnvFile({ project, bilingual, servdCredentials, postmarkToken, smtpCredentials, useRedis, selectedLr, selectedTp, selectedHosting });
+	generateEnvFile({ project, sites, servdCredentials, postmarkToken, smtpCredentials, useRedis, selectedLr, selectedTp, selectedHosting });
 	s.stop('.env generated');
 
 	if (selectedHosting.value === 'craft-cloud') {
@@ -208,11 +208,15 @@ async function main() {
 	cleanUnusedPluginConfigs([...LR_PLUGINS, ...THIRD_PARTY_PLUGINS], allSelected);
 	s.stop('Plugin configs written');
 
-	if (!bilingual) {
-		s.start('Configuring single-language');
-		removeBilingual();
-		s.stop('Single-language configured');
-	}
+	s.start('Scaffolding translations');
+	scaffoldTranslations(sites);
+	cleanUnusedTranslations(sites);
+	s.stop('Translations scaffolded');
+
+	// Write sites config for the PHP project config script to read
+	const tmpDir = `${ROOT}/cli/tmp`;
+	fs.mkdirSync(tmpDir, { recursive: true });
+	fs.writeFileSync(`${tmpDir}/sites.json`, JSON.stringify(sites, null, 2));
 
 	if (project.weekStartDay !== undefined && project.weekStartDay !== 1) {
 		const generalPath = `${ROOT}/config/general.php`;

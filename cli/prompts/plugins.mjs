@@ -8,15 +8,6 @@ import * as p from '@clack/prompts';
 import { LR_PLUGINS, THIRD_PARTY_PLUGINS, HOSTING_OPTIONS } from '../config/plugins.mjs';
 import { cancel } from '../utils/cancel.mjs';
 
-export async function promptBilingual() {
-	const bilingual = await p.confirm({
-		message: 'Include bilingual support (English/Arabic with RTL)?',
-		initialValue: true,
-	});
-	if (p.isCancel(bilingual)) cancel();
-	return bilingual;
-}
-
 export async function promptLrPlugins() {
 	const selected = await p.multiselect({
 		message: 'LindemannRock plugins',

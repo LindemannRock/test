@@ -28,7 +28,7 @@ const HEADER_BLOCK_REGEX = /^# -{3,}[\s\S]*?# -{3,}\n\n?/;
  */
 export function generateEnvFile({
 	project,
-	bilingual,
+	sites = [],
 	servdCredentials,
 	postmarkToken,
 	smtpCredentials,
@@ -60,8 +60,6 @@ export function generateEnvFile({
 
 		// Site URLs (dev only — staging/production are set via the hosting dashboard)
 		PRIMARY_SITE_URL: siteUrlBase,
-		PRIMARY_SITE_URL_EN: `${siteUrlBase}/`,
-		PRIMARY_SITE_NAME_EN: quoted(siteName),
 
 		// Vite dev server
 		VITE_DEV_SERVER_PUBLIC: `${siteUrlBase}:3000/`,
@@ -69,10 +67,13 @@ export function generateEnvFile({
 		CRAFT_TEST_TO_EMAIL_ADDRESS: project.adminEmail,
 	};
 
-	// Bilingual — Arabic site URL
-	if (bilingual) {
-		updates.PRIMARY_SITE_URL_AR = `${siteUrlBase}/ar/`;
-		updates.PRIMARY_SITE_NAME_AR = quoted(`${siteName} (AR)`);
+	// Per-site env vars
+	for (const site of sites) {
+		const h = site.handle.toUpperCase();
+		const url = site.urlPrefix ? `${siteUrlBase}/${site.urlPrefix}/` : `${siteUrlBase}/`;
+		updates[`PRIMARY_SITE_URL_${h}`] = url;
+		updates[`PRIMARY_SITE_NAME_${h}`] = quoted(site.name);
+		updates[`PRIMARY_SITE_LABEL_${h}`] = site.label;
 	}
 
 	// Servd credentials
@@ -115,10 +116,25 @@ export function generateEnvFile({
 		}
 	}
 
-	// Remove bilingual and Redis sections when not needed
-	if (!bilingual) {
-		content = removeSection(content, '# Arabic Site');
+	// Remove template site block — we dynamically append all site blocks below
+	content = removeSection(content, '# English Site');
+	content = removeSection(content, '# Arabic Site');
+
+	// Append site env blocks
+	const siteLines = [];
+	for (const site of sites) {
+		const h = site.handle.toUpperCase();
+		siteLines.push(`# Site: ${site.handle}`);
+		siteLines.push(`PRIMARY_SITE_URL_${h}=`);
+		siteLines.push(`PRIMARY_SITE_NAME_${h}=""`);
+		siteLines.push(`PRIMARY_SITE_LABEL_${h}=${site.label}`);
+		siteLines.push('');
 	}
+	// Insert site blocks after PRIMARY_SITE_URL line
+	content = content.replace(
+		/(PRIMARY_SITE_URL=[^\n]*\n)/,
+		`$1\n${siteLines.join('\n')}`,
+	);
 	if (!useRedis) {
 		content = removeSection(content, '# Redis Cache');
 	}

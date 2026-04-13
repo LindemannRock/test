@@ -28,6 +28,7 @@
 /vendor/
 /node_modules/
 /cli/node_modules/
+/cli/tmp/
 
 # Build files
 /web/dist/

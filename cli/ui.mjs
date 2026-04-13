@@ -10,7 +10,7 @@ export function intro() {
 	p.intro(pc.bgCyan(pc.black(' LindemannRock — Craft CMS Starter ')));
 }
 
-export function showConfigurationSummary({ project, bilingual, useRedis, selectedLr, selectedTp, selectedHosting }) {
+export function showConfigurationSummary({ project, sites, useRedis, selectedLr, selectedTp, selectedHosting }) {
 	const rows = [
 		['Project', project.name],
 		['Site name', project.description],
@@ -20,7 +20,7 @@ export function showConfigurationSummary({ project, bilingual, useRedis, selecte
 		['Week starts', project.weekStartDay === 0 ? 'Sunday' : 'Monday'],
 		['Admin', project.adminEmail],
 		['System email', project.systemEmail],
-		['Bilingual', bilingual ? 'Yes (EN/AR)' : 'No (EN only)'],
+		['Sites', sites.map((s) => `${s.handle} (${s.language})`).join(', ')],
 		['Cache', useRedis ? 'Redis' : 'File (default)'],
 		['LR Plugins', selectedLr.length ? selectedLr.map((pl) => pl.autoAdded ? `${pl.label} (req. by ${pl.autoAdded})` : pl.label).join(', ') : 'None'],
 		['Plugins', selectedTp.length ? selectedTp.map((pl) => pl.autoAdded ? `${pl.label} (req. by ${pl.autoAdded})` : pl.label).join(', ') : 'None'],

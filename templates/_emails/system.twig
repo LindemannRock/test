@@ -1,6 +1,7 @@
 {# System email template — used for password resets, activation emails, etc. #}
 <!DOCTYPE html>
-<html lang="{{ craft.app.language[:2] }}" dir="{% if craft.app.language[:2] == 'ar' %}rtl{% else %}ltr{% endif %}">
+{% set _rtlLanguages = ['ar', 'he', 'fa', 'ur'] %}
+<html lang="{{ craft.app.language[:2] }}" dir="{{ craft.app.language[:2] in _rtlLanguages ? 'rtl' : 'ltr' }}">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">

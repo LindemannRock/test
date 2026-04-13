@@ -92,6 +92,65 @@ $projectConfig->set('system.edition', 'pro');
 $projectConfig->set('system.timeZone', '$CRAFT_TIMEZONE');
 echo "Set edition to Pro, timezone to \$CRAFT_TIMEZONE\n";
 
+// Multi-site configuration — read from temp JSON written by the CLI
+$sitesJsonPath = CRAFT_BASE_PATH . '/cli/tmp/sites.json';
+if (file_exists($sitesJsonPath)) {
+    $sitesConfig = json_decode(file_get_contents($sitesJsonPath), true);
+    $sitesService = Craft::$app->sites;
+    $existingSites = $sitesService->getAllSites();
+    $primarySiteUrl = getenv('PRIMARY_SITE_URL');
+
+    // The default site created by `craft install` — we'll update it to match the first CLI site
+    $defaultSite = $existingSites[0] ?? null;
+
+    foreach ($sitesConfig as $i => $siteData) {
+        $handle = $siteData['handle'];
+        $language = $siteData['language'];
+        $urlPrefix = $siteData['urlPrefix'] ?? '';
+        $name = $siteData['name'] ?? $handle;
+        $handleUpper = strtoupper($handle);
+        $baseUrl = "\$PRIMARY_SITE_URL_{$handleUpper}";
+
+        if ($i === 0 && $defaultSite) {
+            // Update the default site (created by craft install) with CLI values
+            $defaultSite->handle = $handle;
+            $defaultSite->language = $language;
+            $defaultSite->setName($name);
+            $defaultSite->setBaseUrl($baseUrl);
+            $defaultSite->primary = true;
+            $sitesService->saveSite($defaultSite);
+            echo "Updated default site: {$handle} ({$language})\n";
+        } else {
+            // Check if site with this handle already exists
+            $existing = $sitesService->getSiteByHandle($handle);
+            if ($existing) {
+                $existing->language = $language;
+                $existing->setName($name);
+                $existing->setBaseUrl($baseUrl);
+                $sitesService->saveSite($existing);
+                echo "Updated site: {$handle} ({$language})\n";
+            } else {
+                // Create new site
+                $site = new \craft\models\Site([
+                    'groupId' => $defaultSite ? $defaultSite->groupId : 1,
+                    'handle' => $handle,
+                    'language' => $language,
+                    'primary' => false,
+                    'hasUrls' => true,
+                ]);
+                $site->setName($name);
+                $site->setBaseUrl($baseUrl);
+                $sitesService->saveSite($site);
+                echo "Created site: {$handle} ({$language})\n";
+            }
+        }
+    }
+
+    // Clean up temp file
+    unlink($sitesJsonPath);
+    echo "Multi-site configuration complete ({$i} site" . (count($sitesConfig) === 1 ? '' : 's') . ")\n";
+}
+
 // In a standalone script (not a full Craft request), the `afterRequest` hook
 // that normally persists project config never fires. Call the two public save
 // methods explicitly so both the DB and YAML files get updated.

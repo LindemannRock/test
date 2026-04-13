@@ -2,7 +2,7 @@
 {%- block htmlPage -%}
 <!DOCTYPE html>
 {% block htmlTag %}
-	<html lang='{{ lang }}' dir="{% if lang == 'ar' %}rtl{% else %}ltr{% endif %}">
+	<html lang='{{ lang }}' dir="{{ _globals.site.isRtl ? 'rtl' : 'ltr' }}">
 {% endblock htmlTag %}
 	{% block headTag %}
 		<head>
