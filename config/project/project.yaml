@@ -1,27 +1,31 @@
-dateModified: 1775853053
+dateModified: 1776072996
 email:
-  fromEmail: hello@test.com
-  fromName: temp
-  replyToEmail: hello@test.com
+  fromEmail: $SYSTEM_EMAIL
+  fromName: $SYSTEM_SENDER_NAME
+  replyToEmail: $SYSTEM_EMAIL_REPLY_TO
   template: ''
   transportSettings:
     token: $POSTMARK_TOKEN
   transportType: craftcms\postmark\Adapter
 meta:
   __names__:
-    5a7ef3eb-2786-4c17-ac47-2b813faef39b: temp # temp
-    121ca914-de72-47df-b225-480943e88799: New # New
-    c7fe826b-1546-4148-83da-390e642c26e3: temp # temp
-    f5d2cbc9-e7fc-48eb-9157-de10244552e9: 'Contact Form' # Contact Form
+    3cc4acf3-605a-484d-bdec-eaad0e0bdbad: tes # tes
+    3ced4412-76be-4b8f-b07c-8a30af47ff32: New # New
+    99529fbf-4d35-4f2c-a3a5-8bf20e08045f: tes # tes
+    407957b4-deb8-4791-b4c5-306c8198f788: 'Contact Form' # Contact Form
 plugins:
   ckeditor:
     edition: standard
     enabled: true
     schemaVersion: 5.0.0.1
+  cp-clearcache:
+    edition: standard
+    enabled: true
+    schemaVersion: 1.0.0
   formie:
     edition: standard
     enabled: true
-    licenseKey: T88DF18AFLCMRE1DG3T6YA6A
+    licenseKey: 6I5TBQWW8WO62HN4VJ6F2OXK
     schemaVersion: 3.4.12
   logging-library:
     edition: standard
@@ -38,7 +42,7 @@ plugins:
   seomatic:
     edition: standard
     enabled: true
-    licenseKey: 1X62L1DYIU7HR2P2GAXC1XB9
+    licenseKey: F57O6XORBT9YIQMOYV7D8OS6
     schemaVersion: 3.0.13
   servd-asset-storage:
     edition: standard
@@ -49,11 +53,11 @@ plugins:
     enabled: true
     schemaVersion: 1.0.0
 system:
-  edition: solo
-  live: true
-  name: temp
+  edition: pro
+  live: $SYSTEM_STATUS
+  name: tes
   schemaVersion: 5.9.0.8
-  timeZone: America/Los_Angeles
+  timeZone: $SYSTEM_TIMEZONE
 users:
   allowPublicRegistration: false
   defaultGroup: null

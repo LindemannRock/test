@@ -22,6 +22,7 @@ export async function promptProject() {
 					placeholder: 'my-project',
 					validate: (v) => {
 						if (!v) return 'Project name is required';
+						if (v.length > 63) return 'Max 63 characters (DNS limit)';
 						if (!/^[a-z0-9-]+$/.test(v)) return 'Use lowercase letters, numbers, and hyphens only';
 					},
 				}),
@@ -74,6 +75,15 @@ export async function promptProject() {
 	// Part 2 — credentials
 	const credentials = await p.group(
 		{
+			weekStartDay: () =>
+				p.select({
+					message: 'Week starts on',
+					options: [
+						{ value: 1, label: 'Monday', hint: 'Europe, most of the world' },
+						{ value: 0, label: 'Sunday', hint: 'Middle East, US, Canada' },
+					],
+					initialValue: 1,
+				}),
 			cpTrigger: () =>
 				p.text({
 					message: 'CP trigger (URL segment for the control panel)',

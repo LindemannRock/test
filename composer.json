@@ -18,6 +18,7 @@
 		"lindemannrock/craft-logging-library": "^5.0",
 		"nystudio107/craft-seomatic": "^5.1.21",
 		"verbb/formie": "^3.1.19",
+		"mmikkel/cp-clearcache": "^2.0.1",
 		"craftcms/postmark": "^3.1.0",
 		"servd/craft-asset-storage": "^4.2.4.2"
 	},

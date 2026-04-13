@@ -7,10 +7,27 @@
 
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import { ROOT } from '../paths.mjs';
+import { run } from '../utils/run.mjs';
 import { activatePlugins } from './plugins.mjs';
 import { configureEmailTransport } from './projectConfig.mjs';
 import { CORE_PLUGIN_HANDLES } from '../config/plugins.mjs';
+import { shellEscape } from '../utils/validate.mjs';
+
+/**
+ * Returns true if Craft is already installed (has a schemaVersion in project config).
+ */
+function isCraftInstalled() {
+	try {
+		const out = execSync('ddev exec php craft project-config/get system.schemaVersion', {
+			cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'],
+		}).toString().trim();
+		return /^\d+\./.test(out);
+	} catch {
+		return false;
+	}
+}
 
 export function buildInstallSteps({ project, selectedLr, selectedTp, selectedHosting, useRedis }) {
 	const siteName = project.description || project.name;
@@ -57,13 +74,18 @@ export function buildInstallSteps({ project, selectedLr, selectedTp, selectedHos
 		{ msg: 'Installing Node dependencies', cmd: 'ddev exec -- npm install --include=optional --legacy-peer-deps --silent' },
 		{
 			msg: 'Installing Craft CMS',
-			cmd: `ddev exec php craft install` +
-				` --interactive=0` +
-				` --email="${project.adminEmail}"` +
-				` --password="${project.adminPassword}"` +
-				` --site-name="${siteName}"` +
-				` --site-url="${siteUrl}"` +
-				` --language=${project.language}`,
+			fn: async () => {
+				if (isCraftInstalled()) return 'skipped';
+				await run(
+					`ddev exec php craft install` +
+					` --interactive=0` +
+					` --email=${shellEscape(project.adminEmail)}` +
+					` --password=${shellEscape(project.adminPassword)}` +
+					` --site-name=${shellEscape(siteName)}` +
+					` --site-url=${shellEscape(siteUrl)}` +
+					` --language=${shellEscape(project.language)}`,
+				);
+			},
 		},
 		{
 			msg: `Activating ${pluginHandles.length} plugin${pluginHandles.length === 1 ? '' : 's'}`,

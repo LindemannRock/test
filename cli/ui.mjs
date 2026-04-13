@@ -17,6 +17,7 @@ export function showConfigurationSummary({ project, bilingual, useRedis, selecte
 		['Timezone', project.timezone],
 		['Language', project.language],
 		['CP trigger', `/${project.cpTrigger || 'cms'}`],
+		['Week starts', project.weekStartDay === 0 ? 'Sunday' : 'Monday'],
 		['Admin', project.adminEmail],
 		['System email', project.systemEmail],
 		['Bilingual', bilingual ? 'Yes (EN/AR)' : 'No (EN only)'],
@@ -102,6 +103,11 @@ export function outro({ project }) {
 		`  ${pc.bold('Site')}     ${pc.cyan(siteUrl)}\n` +
 		`  ${pc.bold('Admin')}    ${pc.cyan(cpUrl)}\n` +
 		`  ${pc.bold('Login')}    ${project.adminEmail}\n\n` +
-		`  ${pc.dim('Next:')} Run ${pc.bold('make dev')} to start developing\n`
+		`  ${pc.dim('Common commands:')}\n` +
+		`  ${pc.bold('make dev')}       Start Vite dev server (HMR)\n` +
+		`  ${pc.bold('make prod')}      Production build\n` +
+		`  ${pc.bold('make install')}   Re-sync project (idempotent)\n` +
+		`  ${pc.bold('make reset')}     Wipe DB + .env, re-run setup\n` +
+		`  ${pc.bold('make help')}      See all available commands\n`
 	);
 }

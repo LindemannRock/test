@@ -28,12 +28,14 @@ These must be set for any non-local environment. Missing values will crash Craft
 | `CRAFT_ALLOW_ADMIN_CHANGES` | `true` | `false` | `false` |
 | `CRAFT_ALLOW_UPDATES` | `true` | `false` | `false` |
 | `CRAFT_DISALLOW_ROBOTS` | `true` | `true` | `false` |
+| `CRAFT_IS_SYSTEM_LIVE` | `true` | `true` | `true` |
+| `CRAFT_RUN_QUEUE_AUTOMATICALLY` | `true` | `false` (Servd) | `false` (Servd) |
 | `CRAFT_TIMEZONE` | `UTC` or other | same | same |
 | `PRIMARY_SITE_URL` | `https://{project}.ddev.site` | staging URL | production URL |
 
 ## Email
 
-The mailer in `config/app.php` picks a transport based on which env vars are set, in this order:
+Email transport is configured in project config during `make create`. The PHP script (`cli/scripts/configure-project.php`) picks a transport based on which env vars are set, in this order:
 
 1. **Postmark** — if `POSTMARK_TOKEN` is set and the `craftcms/postmark` plugin is installed
 2. **Generic SMTP** — if `SMTP_HOSTNAME` is set (e.g. Servd SMTP, Mailgun)

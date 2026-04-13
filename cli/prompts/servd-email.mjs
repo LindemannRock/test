@@ -63,6 +63,8 @@ export async function promptServdEmail() {
 						validate: (v) => {
 							if (!v) return 'SMTP port is required';
 							if (!/^\d+$/.test(v)) return 'Port must be a number';
+							const n = Number(v);
+							if (n < 1 || n > 65535) return 'Port must be between 1 and 65535';
 						},
 					}),
 				username: () =>

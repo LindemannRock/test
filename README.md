@@ -15,7 +15,7 @@ An opinionated, interactive Craft CMS 5 starter. Run `make create`, answer a few
 - **Email transport configured automatically** — Postmark, SMTP (Servd SMTP, Mailgun, etc.), or Mailpit as a safe dev default; written to project config so the CP shows the right value and Servd's sendmail alert never fires
 - **Redis opt-in** — adds `ddev/ddev-redis` addon + `yii2-redis` package + `cache` component override in one choice
 - **Bilingual scaffolding** — English/Arabic with RTL support and per-language favicon generation (opt-out during setup)
-- **Multi-environment build pipeline** — Vite 7 with per-env output (`web/dist/{dev,stage,prod}`), Subresource Integrity (SRI), gzip compression, critical CSS with Nginx SSI, and page-specific asset splitting
+- **Vite 7 build pipeline** — single `web/dist/` output, Subresource Integrity (SRI), gzip compression, critical CSS with Nginx SSI, and page-specific asset splitting. For per-environment runtime config (Algolia keys, Mapbox tokens, etc.) inject from Twig into `window.__APP_CONFIG__` — do **not** rely on `import.meta.env.VITE_*` baking values into the bundle.
 - **TypeScript-first frontend** — Alpine.js session/UTM store, lazy-loaded Swiper + mmenu + Alpine plugins
 - **Tailwind CSS 4 (CSS-first)** — no `tailwind.config.*` file, theme in `src/css/global.css` via `@theme`
 - **Template hierarchy** — `_boilerplate → base-web → base-html → base → header/footer` with an entry router pattern (`_routerEntries.twig`)
@@ -126,7 +126,7 @@ craft-starter/
 │       └── plugins/       Per-plugin config.php templates
 ├── config/
 │   ├── app.php            Only the `cache` component override
-│   ├── general.php        Project-wide constants (no env-overridable settings)
+│   ├── general.php        Project-wide constants (no env-overridable settings — use CRAFT_* in .env)
 │   ├── project/           Craft's project config (auto-generated)
 │   └── vite.php           nystudio107/craft-vite config
 ├── src/                   Frontend: css, js, brand, cp, fonts, icons, img
@@ -225,7 +225,7 @@ Entry routing is handled by `_routerEntries.twig`, which resolves the most speci
 
 The CLI generates `.env` from `cli/templates/env.example` on every run. For local changes, edit `.env` directly. For staging/production deployment, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
-Craft's built-in settings use `CRAFT_*` env vars (`CRAFT_DEV_MODE`, `CRAFT_TIMEZONE`, `CRAFT_CP_TRIGGER`, etc.) which Craft auto-reads into `GeneralConfig`. We don't re-read them in `general.php` — **one source of truth per setting**.
+Craft's built-in settings use `CRAFT_*` env vars (`CRAFT_DEV_MODE`, `CRAFT_TIMEZONE`, `CRAFT_CP_TRIGGER`, `CRAFT_IS_SYSTEM_LIVE`, etc.) which Craft auto-reads into `GeneralConfig`. Project config values use `SYSTEM_*` env vars (`SYSTEM_NAME`, `SYSTEM_EMAIL`, etc.) referenced as `$VAR` in YAML. We don't re-read `CRAFT_*` vars in `general.php` — **one source of truth per setting**.
 
 ## After `make create`
 

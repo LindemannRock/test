@@ -38,6 +38,20 @@ help: ## Show this help
 		$(MAKEFILE_LIST)
 	@echo ""
 
+# -----------------------------------------------------------------------------
+# alias_hint — prints "tip: shortcut is 'make <alias>'" after an aliased
+# target's recipe, but only when the long-form target was invoked directly.
+# The alias is parsed from the target's own `## @<alias>` help comment, so
+# adding a new alias requires no changes here — just add `$(call alias_hint)`
+# to the recipe.
+# -----------------------------------------------------------------------------
+define alias_hint
+@if echo " $(MAKECMDGOALS) " | grep -q " $@ "; then \
+  alias=$$(grep -E "^$@[[:space:]]*:.*## @[a-zA-Z0-9_-]+" $(firstword $(MAKEFILE_LIST)) | sed -nE 's/.*## @([a-zA-Z0-9_-]+).*/\1/p' | head -1); \
+  [ -n "$$alias" ] && printf '  \033[2mtip: shortcut is\033[0m \033[36mmake %s\033[0m\n' "$$alias"; \
+fi
+endef
+
 ##@ Setup & install
 
 create: ## Interactive setup (prompts → install Craft + plugins end-to-end)
@@ -60,14 +74,14 @@ install: ## Install or re-sync the project (idempotent — safe to run anytime)
 		echo "Craft already installed — skipping first-run install"; \
 	else \
 		echo "Installing Craft CMS..."; \
-		ddev exec php craft install --interactive=0; \
+		ddev exec php craft install; \
 	fi
 	ddev exec php craft up --interactive=0
 	@echo "Install/sync complete"
 
 start: ## ddev start + Vite dev server
 	ddev start
-	ddev exec npm run serve
+	ddev exec npm run dev
 
 keys: ## Generate Craft security key + app ID into .env
 	ddev exec php craft setup/keys
@@ -86,19 +100,24 @@ prod: ## Production build
 
 format: ## @fmt Format everything with Prettier
 	ddev exec npx prettier -w .
+	$(call alias_hint)
 
 kill-vite: ## @kv Kill stuck Vite processes
 	@ddev exec bash -c "pkill -9 -f 'node.*vite'" 2>/dev/null || true
 	@echo "Vite processes killed"
+	$(call alias_hint)
 
 launch: ## @l Launch the site in your browser
 	ddev launch
+	$(call alias_hint)
 
 tableplus: ## @tp Launch TablePlus
 	ddev tableplus
+	$(call alias_hint)
 
 mailpit: ## @mp Launch Mailpit
 	ddev mailpit
+	$(call alias_hint)
 
 # Short aliases — parsed into the alias column of `make help` via the
 # `## @<alias>` annotation on each canonical target above. Keep them here

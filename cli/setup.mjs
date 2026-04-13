@@ -32,9 +32,11 @@ import { writePluginConfigs, cleanUnusedPluginConfigs } from './actions/plugins.
 import { removeBilingual } from './actions/bilingual.mjs';
 import { buildInstallSteps } from './actions/install.mjs';
 import { intro, showConfigurationSummary, outro } from './ui.mjs';
+import fs from 'fs';
 import { cancel } from './utils/cancel.mjs';
 import { run } from './utils/run.mjs';
 import { checkPrerequisites } from './utils/preflight.mjs';
+import { ROOT } from './paths.mjs';
 
 // Phase collectors — each one updates `state` in place. Extracted so the review
 // loop can re-run a single section without re-asking everything else.
@@ -87,6 +89,25 @@ async function main() {
 
 	// Bail out early with a clear message if Docker/DDEV/Node aren't ready
 	checkPrerequisites();
+
+	// Detect existing project — .env is written on first run
+	if (fs.existsSync(`${ROOT}/.env`)) {
+		p.log.warn('A project already exists in this directory (.env found).');
+		const action = await p.select({
+			message: 'What would you like to do?',
+			options: [
+				{ value: 'continue', label: 'Continue anyway', hint: 'overwrite config files, skip Craft install if already set up' },
+				{ value: 'reset', label: 'Start fresh', hint: 'same as make reset — wipes DB + .env, then re-runs setup' },
+				{ value: 'cancel', label: 'Cancel' },
+			],
+		});
+		if (p.isCancel(action) || action === 'cancel') cancel();
+		if (action === 'reset') {
+			p.log.info('Run ' + pc.bold('make reset') + ' to wipe and start over.');
+			process.exit(0);
+		}
+		// action === 'continue' — fall through to prompts
+	}
 
 	const state = {};
 
@@ -161,6 +182,13 @@ async function main() {
 		s.stop('Single-language configured');
 	}
 
+	if (project.weekStartDay !== undefined && project.weekStartDay !== 1) {
+		const generalPath = `${ROOT}/config/general.php`;
+		let general = fs.readFileSync(generalPath, 'utf-8');
+		general = general.replace('->defaultWeekStartDay(1)', `->defaultWeekStartDay(${project.weekStartDay})`);
+		fs.writeFileSync(generalPath, general);
+	}
+
 	// -- Install pipeline ----------------------------------------------------
 	const steps = buildInstallSteps({
 		project,
@@ -171,12 +199,24 @@ async function main() {
 	});
 	for (const step of steps) {
 		s.start(step.msg);
-		if (step.fn) {
-			await step.fn();
-		} else {
-			await run(step.cmd);
+		try {
+			let result;
+			if (step.fn) {
+				result = await step.fn();
+			} else {
+				await run(step.cmd);
+			}
+			if (result === 'skipped') {
+				s.stop(pc.yellow('\u2192') + ' ' + step.msg + pc.dim(' (already done)'));
+			} else {
+				s.stop(pc.green('\u2713') + ' ' + step.msg);
+			}
+		} catch (err) {
+			s.stop(pc.red('\u2717') + ' ' + step.msg);
+			p.log.error(err.message);
+			p.cancel('Installation failed. Fix the error above and re-run: make install');
+			process.exit(1);
 		}
-		s.stop(pc.green('\u2713') + ' ' + step.msg);
 	}
 
 	outro({ project });

@@ -39,13 +39,10 @@ $app = require CRAFT_VENDOR_PATH . '/craftcms/cms/bootstrap/console.php';
 $projectConfig = Craft::$app->projectConfig;
 $currentEmail = $projectConfig->get('email') ?? [];
 
-$systemEmail = getenv('SYSTEM_EMAIL');
-$systemSender = getenv('SYSTEM_SENDER_NAME');
-
 $email = array_merge($currentEmail, [
-    'fromEmail' => $systemEmail ?: ($currentEmail['fromEmail'] ?? 'hello@example.com'),
-    'fromName' => $systemSender ?: ($currentEmail['fromName'] ?? 'Site'),
-    'replyToEmail' => $systemEmail ?: ($currentEmail['replyToEmail'] ?? null),
+    'fromEmail' => '$SYSTEM_EMAIL',
+    'fromName' => '$SYSTEM_SENDER_NAME',
+    'replyToEmail' => '$SYSTEM_EMAIL_REPLY_TO',
     'template' => $currentEmail['template'] ?? '',
 ]);
 
@@ -88,6 +85,12 @@ if ($postmarkToken && class_exists('craftcms\\postmark\\Adapter')) {
 }
 
 $projectConfig->set('email', $email);
+
+// System settings — Pro edition, timezone from env var.
+// system.live is controlled by CRAFT_IS_SYSTEM_LIVE in .env (auto-read by Craft).
+$projectConfig->set('system.edition', 'pro');
+$projectConfig->set('system.timeZone', '$CRAFT_TIMEZONE');
+echo "Set edition to Pro, timezone to \$CRAFT_TIMEZONE\n";
 
 // In a standalone script (not a full Craft request), the `afterRequest` hook
 // that normally persists project config never fires. Call the two public save
