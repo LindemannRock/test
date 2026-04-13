@@ -103,19 +103,28 @@ if (file_exists($sitesJsonPath)) {
     // The default site created by `craft install` — we'll update it to match the first CLI site
     $defaultSite = $existingSites[0] ?? null;
 
+    // Use the default site group created by craft install — don't create new ones.
+    // Update its name to use env var so it stays portable.
+    $defaultGroupId = $defaultSite ? $defaultSite->groupId : 1;
+    $siteGroup = Craft::$app->sites->getGroupById($defaultGroupId);
+    if ($siteGroup) {
+        $siteGroup->setName('$SYSTEM_NAME');
+        Craft::$app->sites->saveGroup($siteGroup);
+    }
+
     foreach ($sitesConfig as $i => $siteData) {
         $handle = $siteData['handle'];
         $language = $siteData['language'];
-        $urlPrefix = $siteData['urlPrefix'] ?? '';
-        $name = $siteData['name'] ?? $handle;
         $handleUpper = strtoupper($handle);
+        // Use env var references so project config stays portable across environments
         $baseUrl = "\$PRIMARY_SITE_URL_{$handleUpper}";
+        $siteName = "\$PRIMARY_SITE_NAME_{$handleUpper}";
 
         if ($i === 0 && $defaultSite) {
             // Update the default site (created by craft install) with CLI values
             $defaultSite->handle = $handle;
             $defaultSite->language = $language;
-            $defaultSite->setName($name);
+            $defaultSite->setName($siteName);
             $defaultSite->setBaseUrl($baseUrl);
             $defaultSite->primary = true;
             $sitesService->saveSite($defaultSite);
@@ -125,20 +134,20 @@ if (file_exists($sitesJsonPath)) {
             $existing = $sitesService->getSiteByHandle($handle);
             if ($existing) {
                 $existing->language = $language;
-                $existing->setName($name);
+                $existing->setName($siteName);
                 $existing->setBaseUrl($baseUrl);
                 $sitesService->saveSite($existing);
                 echo "Updated site: {$handle} ({$language})\n";
             } else {
-                // Create new site
+                // Create new site in the default group
                 $site = new \craft\models\Site([
-                    'groupId' => $defaultSite ? $defaultSite->groupId : 1,
+                    'groupId' => $defaultGroupId,
                     'handle' => $handle,
                     'language' => $language,
                     'primary' => false,
                     'hasUrls' => true,
                 ]);
-                $site->setName($name);
+                $site->setName($siteName);
                 $site->setBaseUrl($baseUrl);
                 $sitesService->saveSite($site);
                 echo "Created site: {$handle} ({$language})\n";
@@ -148,7 +157,8 @@ if (file_exists($sitesJsonPath)) {
 
     // Clean up temp file
     unlink($sitesJsonPath);
-    echo "Multi-site configuration complete ({$i} site" . (count($sitesConfig) === 1 ? '' : 's') . ")\n";
+    $siteCount = count($sitesConfig);
+    echo "Multi-site configuration complete ({$siteCount} site" . ($siteCount === 1 ? '' : 's') . ")\n";
 }
 
 // In a standalone script (not a full Craft request), the `afterRequest` hook

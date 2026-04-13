@@ -4,6 +4,8 @@
 
 # DDEV auto-generated overrides (from `make share` / `make funnel`)
 /.ddev/config.tailscale.yaml
+/.ddev/traefik/certs/
+/.ddev/traefik/config/
 
 # Craft CMS
 /config/license.key

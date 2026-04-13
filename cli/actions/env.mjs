@@ -67,14 +67,9 @@ export function generateEnvFile({
 		CRAFT_TEST_TO_EMAIL_ADDRESS: project.adminEmail,
 	};
 
-	// Per-site env vars
-	for (const site of sites) {
-		const h = site.handle.toUpperCase();
-		const url = site.urlPrefix ? `${siteUrlBase}/${site.urlPrefix}/` : `${siteUrlBase}/`;
-		updates[`PRIMARY_SITE_URL_${h}`] = url;
-		updates[`PRIMARY_SITE_NAME_${h}`] = quoted(site.name);
-		updates[`PRIMARY_SITE_LABEL_${h}`] = site.label;
-	}
+	// Per-site env vars — NOT added to updates because the site blocks are
+	// dynamically appended later (after the template blocks are removed).
+	// Values are written directly into the appended blocks instead.
 
 	// Servd credentials
 	if (servdCredentials) {
@@ -120,13 +115,14 @@ export function generateEnvFile({
 	content = removeSection(content, '# English Site');
 	content = removeSection(content, '# Arabic Site');
 
-	// Append site env blocks
+	// Append site env blocks with actual values
 	const siteLines = [];
 	for (const site of sites) {
 		const h = site.handle.toUpperCase();
+		const url = site.urlPrefix ? `${siteUrlBase}/${site.urlPrefix}/` : `${siteUrlBase}/`;
 		siteLines.push(`# Site: ${site.handle}`);
-		siteLines.push(`PRIMARY_SITE_URL_${h}=`);
-		siteLines.push(`PRIMARY_SITE_NAME_${h}=""`);
+		siteLines.push(`PRIMARY_SITE_URL_${h}=${url}`);
+		siteLines.push(`PRIMARY_SITE_NAME_${h}=${quoted(site.name)}`);
 		siteLines.push(`PRIMARY_SITE_LABEL_${h}=${site.label}`);
 		siteLines.push('');
 	}
