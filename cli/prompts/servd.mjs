@@ -7,11 +7,9 @@ import * as p from '@clack/prompts';
 import { cancel } from '../utils/cancel.mjs';
 
 export async function promptServdCredentials() {
-	p.note(
-		'Servd requires a Project Slug and Security Key for local development.\n' +
-		'Get them from: https://app.servd.host → Project Settings → Assets',
-		'Servd credentials',
-	);
+	p.log.info('Servd requires a Project Slug and Security Key.\n' +
+		'Get them from: https://app.servd.host\n' +
+		'→ Project Settings → Assets');
 
 	const credentials = await p.group(
 		{

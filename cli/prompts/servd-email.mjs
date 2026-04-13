@@ -20,11 +20,9 @@ import { THIRD_PARTY_PLUGINS } from '../config/plugins.mjs';
  * }>}
  */
 export async function promptServdEmail() {
-	p.note(
-		'Servd does not support Sendmail. Choose an email transport so Craft can\n' +
-		'send password resets, form notifications, etc.',
-		'Servd email transport',
-	);
+	p.log.info('Servd does not support Sendmail.\n' +
+		'Choose an email transport for password resets,\n' +
+		'form notifications, etc.');
 
 	const choice = await p.select({
 		message: 'How should Craft send email?',

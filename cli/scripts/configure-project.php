@@ -89,6 +89,7 @@ $projectConfig->set('email', $email);
 // System settings — Pro edition, timezone from env var.
 // system.live is controlled by CRAFT_IS_SYSTEM_LIVE in .env (auto-read by Craft).
 $projectConfig->set('system.edition', 'pro');
+$projectConfig->set('system.name', '$SYSTEM_NAME');
 $projectConfig->set('system.timeZone', '$CRAFT_TIMEZONE');
 echo "Set edition to Pro, timezone to \$CRAFT_TIMEZONE\n";
 
@@ -103,14 +104,8 @@ if (file_exists($sitesJsonPath)) {
     // The default site created by `craft install` — we'll update it to match the first CLI site
     $defaultSite = $existingSites[0] ?? null;
 
-    // Use the default site group created by craft install — don't create new ones.
-    // Update its name to use env var so it stays portable.
+    // Use the default site group created by craft install — don't create new ones
     $defaultGroupId = $defaultSite ? $defaultSite->groupId : 1;
-    $siteGroup = Craft::$app->sites->getGroupById($defaultGroupId);
-    if ($siteGroup) {
-        $siteGroup->setName('$SYSTEM_NAME');
-        Craft::$app->sites->saveGroup($siteGroup);
-    }
 
     foreach ($sitesConfig as $i => $siteData) {
         $handle = $siteData['handle'];
@@ -124,19 +119,20 @@ if (file_exists($sitesJsonPath)) {
             // Update the default site (created by craft install) with CLI values
             $defaultSite->handle = $handle;
             $defaultSite->language = $language;
-            $defaultSite->setName($siteName);
             $defaultSite->setBaseUrl($baseUrl);
             $defaultSite->primary = true;
             $sitesService->saveSite($defaultSite);
+            // Force env var reference for name — saveSite() resolves $VAR strings
+            $projectConfig->set("sites.{$defaultSite->uid}.name", $siteName);
             echo "Updated default site: {$handle} ({$language})\n";
         } else {
             // Check if site with this handle already exists
             $existing = $sitesService->getSiteByHandle($handle);
             if ($existing) {
                 $existing->language = $language;
-                $existing->setName($siteName);
                 $existing->setBaseUrl($baseUrl);
                 $sitesService->saveSite($existing);
+                $projectConfig->set("sites.{$existing->uid}.name", $siteName);
                 echo "Updated site: {$handle} ({$language})\n";
             } else {
                 // Create new site in the default group
@@ -147,9 +143,9 @@ if (file_exists($sitesJsonPath)) {
                     'primary' => false,
                     'hasUrls' => true,
                 ]);
-                $site->setName($siteName);
                 $site->setBaseUrl($baseUrl);
                 $sitesService->saveSite($site);
+                $projectConfig->set("sites.{$site->uid}.name", $siteName);
                 echo "Created site: {$handle} ({$language})\n";
             }
         }
