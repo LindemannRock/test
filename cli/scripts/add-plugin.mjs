@@ -105,17 +105,9 @@ const handle = extractHandle(details.extra) || '';
 const parts = latestVersion.split('.');
 const suggestedConstraint = `^${parts[0]}.${parts[1]}`;
 
-p.log.info(`Latest: ${pc.green(latestVersion)}  Handle: ${pc.cyan(handle || '(unknown)')}`);
-
-// Which list
-const list = await p.select({
-	message: 'Add to which list?',
-	options: [
-		{ value: 'lr', label: 'LR Plugins', hint: 'LindemannRock internal' },
-		{ value: 'tp', label: 'Third-party Plugins', hint: 'Community / vendor' },
-	],
-});
-if (p.isCancel(list)) process.exit(0);
+// Auto-detect list from vendor prefix
+const list = packageName.startsWith('lindemannrock/') ? 'lr' : 'tp';
+p.log.info(`Latest: ${pc.green(latestVersion)}  Handle: ${pc.cyan(handle || '(unknown)')}  List: ${pc.cyan(list === 'lr' ? 'LR Plugins' : 'Third-party')}`);
 
 // Confirm / edit details
 const pluginHandle = await p.text({
