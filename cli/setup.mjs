@@ -23,6 +23,7 @@ import { promptSites } from './prompts/sites.mjs';
 import { promptServdCredentials } from './prompts/servd.mjs';
 import { promptServdEmail } from './prompts/servd-email.mjs';
 import { promptPostmarkToken } from './prompts/postmark.mjs';
+import { promptTranslationCategories } from './prompts/translation-manager.mjs';
 import { promptRedis } from './prompts/redis.mjs';
 import { updateComposer } from './actions/composer.mjs';
 import { updatePackageJson } from './actions/packageJson.mjs';
@@ -76,16 +77,27 @@ async function collectPlugins(state) {
 	}
 }
 
+async function collectPluginConfig(state) {
+	state.translationCategories = null;
+
+	const hasTranslationManager = [...state.selectedLr, ...state.selectedTp].some((pl) => pl.handle === 'translation-manager');
+	if (hasTranslationManager) {
+		state.translationCategories = await promptTranslationCategories();
+	}
+}
+
 async function collectHosting(state) {
 	state.selectedHosting = await promptHosting();
-
 	state.servdCredentials = null;
-	state.postmarkToken = null;
-	state.smtpCredentials = null;
 
 	if (state.selectedHosting.value === 'servd') {
 		state.servdCredentials = await promptServdCredentials();
 	}
+}
+
+async function collectEmail(state) {
+	state.postmarkToken = null;
+	state.smtpCredentials = null;
 
 	const hasPostmark = state.selectedTp.some((pl) => pl.handle === 'postmark');
 
@@ -95,7 +107,6 @@ async function collectHosting(state) {
 		const servdEmail = await promptServdEmail();
 		if (servdEmail.type === 'postmark') {
 			state.postmarkToken = servdEmail.postmarkToken;
-			// Auto-add the Postmark plugin to the selection (avoid duplicates)
 			if (!state.selectedTp.some((pl) => pl.handle === 'postmark')) {
 				state.selectedTp.push(servdEmail.postmarkPlugin);
 			}
@@ -136,7 +147,9 @@ async function main() {
 	await collectProject(state);
 	await collectSitesAndFeatures(state);
 	await collectPlugins(state);
+	await collectPluginConfig(state);
 	await collectHosting(state);
+	await collectEmail(state);
 
 	// -- Review loop ---------------------------------------------------------
 	while (true) {
@@ -163,14 +176,18 @@ async function main() {
 		if (action === 'features') await collectSitesAndFeatures(state);
 		if (action === 'plugins') {
 			await collectPlugins(state);
-			// Plugin changes can affect hosting/email logic — re-run hosting too
+			await collectPluginConfig(state);
 			await collectHosting(state);
+			await collectEmail(state);
 		}
-		if (action === 'hosting') await collectHosting(state);
+		if (action === 'hosting') {
+			await collectHosting(state);
+			await collectEmail(state);
+		}
 	}
 
 	const { project, sites, useRedis, selectedLr, selectedTp, selectedHosting,
-		servdCredentials, postmarkToken, smtpCredentials } = state;
+		servdCredentials, postmarkToken, smtpCredentials, translationCategories } = state;
 
 	// -- Apply file changes --------------------------------------------------
 	const s = p.spinner();
@@ -188,7 +205,7 @@ async function main() {
 	s.stop('DDEV config updated');
 
 	s.start('Generating .env');
-	generateEnvFile({ project, sites, servdCredentials, postmarkToken, smtpCredentials, useRedis, selectedLr, selectedTp, selectedHosting });
+	generateEnvFile({ project, sites, servdCredentials, postmarkToken, smtpCredentials, useRedis, selectedLr, selectedTp, selectedHosting, translationCategories });
 	s.stop('.env generated');
 
 	if (selectedHosting.value === 'craft-cloud') {
@@ -209,7 +226,7 @@ async function main() {
 	s.stop('Plugin configs written');
 
 	s.start('Scaffolding translations');
-	scaffoldTranslations(sites);
+	scaffoldTranslations(sites, translationCategories?.primary || 'site');
 	cleanUnusedTranslations(sites);
 	s.stop('Translations scaffolded');
 
