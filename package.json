@@ -1,7 +1,7 @@
 {
-	"name": "test",
+	"name": "@lindemannrock/craft-starter",
 	"version": "1.0.0",
-	"description": "test",
+	"description": "LindemannRock Craft CMS Starter",
 	"type": "module",
 	"author": {
 		"name": "Bilal Harry Lindemann",
