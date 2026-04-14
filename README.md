@@ -97,6 +97,10 @@ Run `make` (or `make help`) with no arguments to see a grouped, color-coded list
 | `make update`           | Run `craft update all` (Craft + plugins via Craft updater) |
 | `make update-composer`  | Update Composer packages to latest matching versions       |
 | `make update-npm`       | Update NPM packages (interactive via `npm-check`)          |
+| `make check-plugins`    | Check plugin registry versions against Packagist           |
+| `make update-plugins`   | Interactively update plugin registry versions              |
+| `make add-plugin`       | Add a new plugin to the registry (searches Packagist)      |
+| `make fetch-configs`    | Fetch default `config.php` for registered plugins          |
 | `make clean`            | Remove vendor & node_modules then reinstall                |
 | `make clean-logs`       | Remove `storage/logs/*.log`                                |
 | `make export-db`        | Export local DB to `db.sql.gz` (or `file=path/to/out.sql.gz`) |
