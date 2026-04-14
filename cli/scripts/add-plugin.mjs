@@ -55,6 +55,32 @@ function extractHandle(extra, packageName) {
 	return packageName.split('/').pop().replace(/^craft-/i, '');
 }
 
+/**
+ * Fetch the plugin's default src/config.php from GitHub, if it exists.
+ * Returns the file contents or null.
+ */
+async function fetchPluginConfig(sourceUrl, ref) {
+	if (!sourceUrl?.includes('github.com')) return null;
+	// Convert https://github.com/vendor/repo.git → vendor/repo
+	const match = sourceUrl.match(/github\.com\/([^/]+\/[^/.]+)/);
+	if (!match) return null;
+	const repo = match[1];
+	// Try common config file paths
+	const paths = ['src/config.php', 'src/config/config.php'];
+	for (const p of paths) {
+		try {
+			const res = await fetch(`https://raw.githubusercontent.com/${repo}/${ref}/${p}`);
+			if (res.ok) {
+				const text = await res.text();
+				if (text.startsWith('<?php')) return text;
+			}
+		} catch {
+			// try next path
+		}
+	}
+	return null;
+}
+
 p.intro(pc.bgCyan(pc.black(' Add Plugin to Registry ')));
 
 // Check if already registered
@@ -162,6 +188,21 @@ if (hasConfig) {
 		defaultValue: `${pluginHandle || handle}.php`,
 	});
 	if (p.isCancel(configFile)) process.exit(0);
+
+	// Try to fetch the plugin's default config.php from GitHub
+	const templatePath = path.join(__dirname, '..', 'templates', 'plugins', configFile);
+	if (fs.existsSync(templatePath)) {
+		p.log.info(`Template already exists at cli/templates/plugins/${configFile} — keeping existing.`);
+	} else {
+		s.start('Fetching default config.php from GitHub');
+		const configContent = await fetchPluginConfig(details.source?.url, details.source?.reference);
+		if (configContent) {
+			fs.writeFileSync(templatePath, configContent);
+			s.stop(`Fetched config.php → cli/templates/plugins/${configFile}`);
+		} else {
+			s.stop(pc.yellow(`No config.php found. Create cli/templates/plugins/${configFile} manually.`));
+		}
+	}
 }
 
 // Build the entry

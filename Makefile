@@ -191,6 +191,9 @@ update-plugins: ## Update plugin registry versions (confirms major bumps)
 add-plugin: ## Add a new plugin to the registry (searches Packagist)
 	@node cli/scripts/add-plugin.mjs
 
+fetch-configs: ## Fetch default config.php for registered plugins from GitHub
+	@node cli/scripts/fetch-plugin-configs.mjs
+
 clean: ## Remove vendor & node_modules then reinstall
 	@if [ ! -f .env ]; then \
 		echo "No .env file found. Run 'make create' for interactive setup."; \
