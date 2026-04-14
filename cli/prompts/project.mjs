@@ -112,12 +112,17 @@ export async function promptProject() {
 				}),
 			systemEmail: () =>
 				p.text({
-					message: 'System email (for outgoing mail)',
-					placeholder: 'no-reply@example.com',
+					message: 'System email (from address for outgoing mail)',
+					placeholder: 'info@example.com',
 					validate: (v) => {
 						if (!v) return 'System email is required';
-						if (!isValidEmail(v)) return 'Enter a valid email address (e.g. no-reply@example.com)';
+						if (!isValidEmail(v)) return 'Enter a valid email address (e.g. info@example.com)';
 					},
+				}),
+			noReplyEmail: () =>
+				p.text({
+					message: 'No-reply email (optional — reply-to address)',
+					placeholder: 'no-reply@example.com',
 				}),
 		},
 		{ onCancel: () => cancel() },

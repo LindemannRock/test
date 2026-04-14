@@ -36,7 +36,6 @@ export function generateEnvFile({
 	selectedLr = [],
 	selectedTp = [],
 	selectedHosting = {},
-	translationCategories = null,
 }) {
 	// Start from a clean copy of the source template, stripping the internal header
 	let content = fs.readFileSync(ENV_SOURCE, 'utf-8').replace(HEADER_BLOCK_REGEX, '');
@@ -57,7 +56,7 @@ export function generateEnvFile({
 		SYSTEM_NAME: quoted(siteName),
 		SYSTEM_SENDER_NAME: quoted(siteName),
 		SYSTEM_EMAIL: project.systemEmail,
-		SYSTEM_EMAIL_REPLY_TO: project.systemEmail,
+		SYSTEM_EMAIL_REPLY_TO: project.noReplyEmail || project.systemEmail,
 
 		// Site URLs (dev only — staging/production are set via the hosting dashboard)
 		PRIMARY_SITE_URL: siteUrlBase,
@@ -95,12 +94,6 @@ export function generateEnvFile({
 		updates.SMTP_USERNAME = smtpCredentials.username;
 		updates.SMTP_PASSWORD = quoted(smtpCredentials.password);
 		updates.SMTP_USE_AUTH = smtpCredentials.useAuth ? 'true' : 'false';
-	}
-
-	// Translation Manager categories
-	if (translationCategories) {
-		updates.TRANSLATION_CATEGORY_PRIMARY = translationCategories.primary;
-		updates.TRANSLATION_CATEGORY_FORM = translationCategories.form;
 	}
 
 	// Apply all scalar updates

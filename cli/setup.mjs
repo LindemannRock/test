@@ -23,7 +23,7 @@ import { promptSites } from './prompts/sites.mjs';
 import { promptServdCredentials } from './prompts/servd.mjs';
 import { promptServdEmail } from './prompts/servd-email.mjs';
 import { promptPostmarkToken } from './prompts/postmark.mjs';
-import { promptTranslationCategories } from './prompts/translation-manager.mjs';
+import { promptTranslationCategory } from './prompts/translation-manager.mjs';
 import { promptRedis } from './prompts/redis.mjs';
 import { updateComposer } from './actions/composer.mjs';
 import { updatePackageJson } from './actions/packageJson.mjs';
@@ -78,11 +78,11 @@ async function collectPlugins(state) {
 }
 
 async function collectPluginConfig(state) {
-	state.translationCategories = null;
+	state.translationCategory = null;
 
 	const hasTranslationManager = [...state.selectedLr, ...state.selectedTp].some((pl) => pl.handle === 'translation-manager');
 	if (hasTranslationManager) {
-		state.translationCategories = await promptTranslationCategories();
+		state.translationCategory = await promptTranslationCategory();
 	}
 }
 
@@ -187,7 +187,7 @@ async function main() {
 	}
 
 	const { project, sites, useRedis, selectedLr, selectedTp, selectedHosting,
-		servdCredentials, postmarkToken, smtpCredentials, translationCategories } = state;
+		servdCredentials, postmarkToken, smtpCredentials, translationCategory } = state;
 
 	// -- Apply file changes --------------------------------------------------
 	const s = p.spinner();
@@ -205,7 +205,7 @@ async function main() {
 	s.stop('DDEV config updated');
 
 	s.start('Generating .env');
-	generateEnvFile({ project, sites, servdCredentials, postmarkToken, smtpCredentials, useRedis, selectedLr, selectedTp, selectedHosting, translationCategories });
+	generateEnvFile({ project, sites, servdCredentials, postmarkToken, smtpCredentials, useRedis, selectedLr, selectedTp, selectedHosting });
 	s.stop('.env generated');
 
 	if (selectedHosting.value === 'craft-cloud') {
@@ -223,10 +223,50 @@ async function main() {
 	const allSelected = [...selectedLr, ...selectedTp];
 	writePluginConfigs(allSelected);
 	cleanUnusedPluginConfigs([...LR_PLUGINS, ...THIRD_PARTY_PLUGINS], allSelected);
+
+	// Always include lindemannrock-base config when any LR plugin is selected
+	if (selectedLr.length > 0) {
+		const baseSrc = `${ROOT}/cli/templates/plugins/lindemannrock-base.php`;
+		const baseDest = `${ROOT}/config/lindemannrock-base.php`;
+		if (fs.existsSync(baseSrc) && !fs.existsSync(baseDest)) {
+			fs.copyFileSync(baseSrc, baseDest);
+		}
+	}
+
+	// Patch Translation Manager config with prompted category + primary site language
+	if (translationCategory) {
+		const tmConfig = `${ROOT}/config/translation-manager.php`;
+		if (fs.existsSync(tmConfig)) {
+			let content = fs.readFileSync(tmConfig, 'utf-8');
+			content = content.replace(
+				"'translationCategory' => 'messages'",
+				`'translationCategory' => '${translationCategory}'`,
+			);
+			const primaryLang = sites[0]?.language?.split('-')[0] || 'en';
+			content = content.replace(
+				"'sourceLanguage' => 'en'",
+				`'sourceLanguage' => '${primaryLang}'`,
+			);
+			fs.writeFileSync(tmConfig, content);
+		}
+
+		// Patch global-variables.twig to use the prompted category
+		if (translationCategory !== 'site') {
+			const globalVars = `${ROOT}/templates/_layouts/global-variables.twig`;
+			if (fs.existsSync(globalVars)) {
+				let content = fs.readFileSync(globalVars, 'utf-8');
+				content = content.replace(
+					"{% set primaryTranslationCategory = 'site' %}",
+					`{% set primaryTranslationCategory = '${translationCategory}' %}`,
+				);
+				fs.writeFileSync(globalVars, content);
+			}
+		}
+	}
 	s.stop('Plugin configs written');
 
 	s.start('Scaffolding translations');
-	scaffoldTranslations(sites, translationCategories?.primary || 'site');
+	scaffoldTranslations(sites, translationCategory || 'site');
 	cleanUnusedTranslations(sites);
 	s.stop('Translations scaffolded');
 
