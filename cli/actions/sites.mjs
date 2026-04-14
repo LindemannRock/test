@@ -7,28 +7,31 @@ import path from 'path';
 import { ROOT } from '../paths.mjs';
 
 const TRANSLATIONS_DIR = path.join(ROOT, 'translations');
-const EN_TEMPLATE = path.join(TRANSLATIONS_DIR, 'en', 'site.php');
 
 /**
  * Create translation directories for each site.
  * Uses the EN template as a base for new languages.
+ * The filename matches the translation category (default: 'site').
  */
-export function scaffoldTranslations(sites) {
+export function scaffoldTranslations(sites, category = 'site') {
+	const filename = `${category}.php`;
+	const enTemplate = path.join(TRANSLATIONS_DIR, 'en', 'site.php');
+
 	// Read the EN template as the base for all new languages
 	let template = '';
-	if (fs.existsSync(EN_TEMPLATE)) {
-		template = fs.readFileSync(EN_TEMPLATE, 'utf-8');
+	if (fs.existsSync(enTemplate)) {
+		template = fs.readFileSync(enTemplate, 'utf-8');
 	}
 
 	for (const site of sites) {
 		const langDir = path.join(TRANSLATIONS_DIR, site.handle);
-		const sitePhp = path.join(langDir, 'site.php');
+		const targetFile = path.join(langDir, filename);
 
 		fs.mkdirSync(langDir, { recursive: true });
 
-		// Only create site.php if it doesn't exist (don't overwrite user edits)
-		if (!fs.existsSync(sitePhp) && template) {
-			fs.writeFileSync(sitePhp, template);
+		// Only create the file if it doesn't exist (don't overwrite user edits)
+		if (!fs.existsSync(targetFile) && template) {
+			fs.writeFileSync(targetFile, template);
 		}
 	}
 }

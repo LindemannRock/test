@@ -83,13 +83,25 @@ _install:
 	ddev composer install
 	ddev exec -- npm install $(NPM_INSTALL_FLAGS)
 	@# Only run `craft install` if Craft isn't installed yet.
+	@# Prompts for admin email + password only. Site name/URL/language get
+	@# overwritten by configure-project.php immediately after.
 	@if ddev exec php craft project-config/get system.schemaVersion 2>/dev/null | grep -qE '^[0-9]+\.'; then \
 		echo "Craft already installed — skipping first-run install"; \
 	else \
-		echo "Installing Craft CMS..."; \
+		echo "Installing Craft CMS (enter admin credentials)..."; \
 		ddev exec php craft install; \
 	fi
+	@# Activate any plugins listed in composer.json (idempotent — already-active plugins are skipped)
+	@for handle in $$(ddev exec php craft plugin/list --installed 2>/dev/null | awk '$$2 == "No" {print $$1}'); do \
+		echo "Activating plugin: $$handle"; \
+		ddev exec php craft plugin/install "$$handle" 2>/dev/null || true; \
+	done
 	ddev exec php craft up --interactive=0
+	@# Run project config script if sites.json exists (left by make create)
+	@if [ -f cli/tmp/sites.json ]; then \
+		echo "Configuring project (email, sites, system settings)..."; \
+		ddev exec php cli/scripts/configure-project.php; \
+	fi
 	@echo "Install/sync complete"
 
 start: ## ddev start + Vite dev server
