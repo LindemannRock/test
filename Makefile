@@ -1,4 +1,4 @@
-.PHONY: help create install start dev prod reset nuke \
+.PHONY: help create install start dev prod favicons reset nuke \
 	clean clean-logs update update-composer update-npm up npm-install kill-vite \
 	pull-db export-db import-db reindex-search \
 	launch tableplus mailpit keys format share funnel \
@@ -102,6 +102,10 @@ _install:
 		echo "Configuring project (email, sites, system settings)..."; \
 		ddev exec php cli/scripts/configure-project.php; \
 	fi
+	@# Copy CP rebrand assets if not already present
+	@if [ -d cli/templates/rebrand ] && [ ! -d storage/rebrand ]; then \
+		cp -r cli/templates/rebrand storage/rebrand; \
+	fi
 	@echo "Install/sync complete"
 
 start: ## ddev start + Vite dev server
@@ -122,6 +126,9 @@ dev: ## Start Vite dev server (HMR)
 
 prod: ## Production build
 	@$(call require_project, ddev exec npm run build)
+
+favicons: ## Generate site favicons from src/img/favicon.svg
+	@$(call require_project, ddev exec node cli/scripts/generate-favicons.mjs)
 
 format: ## @fmt Format everything with Prettier
 	@$(call require_project, ddev exec npx prettier -w .)
@@ -240,7 +247,7 @@ nuke: ## Destroy DDEV + vendor + node_modules + dist + config/project + .env
 	@# Purge .DS_Store files first so macOS Finder can't block directory removal mid-rm
 	@find vendor node_modules web/dist config/project -name '.DS_Store' -delete 2>/dev/null || true
 	@# First-pass removal
-	@rm -rf vendor node_modules web/dist config/project 2>/dev/null || true
+	@rm -rf vendor node_modules web/dist config/project storage/config-deltas storage/logs storage/rebrand storage/runtime 2>/dev/null || true
 	@rm -f .env composer.lock package-lock.json craft-cloud.yaml 2>/dev/null || true
 	@# Reset files modified by make create back to starter defaults
 	@git checkout composer.json package.json 2>/dev/null || true
@@ -260,14 +267,14 @@ nuke: ## Destroy DDEV + vendor + node_modules + dist + config/project + .env
 	@if [ -e vendor ] || [ -e node_modules ] || [ -e web/dist ] || [ -e config/project ]; then \
 		sleep 1; \
 		find vendor node_modules web/dist config/project -name '.DS_Store' -delete 2>/dev/null || true; \
-		rm -rf vendor node_modules web/dist config/project 2>/dev/null || true; \
+		rm -rf vendor node_modules web/dist config/project storage/config-deltas storage/logs storage/rebrand storage/runtime 2>/dev/null || true; \
 	fi
 	@# Final safety check — fail loudly if anything survived
 	@if [ -e vendor ] || [ -e node_modules ] || [ -e web/dist ] || [ -e config/project ] || [ -e .env ]; then \
 		echo ""; \
 		echo "Some files could not be removed. They may be locked by a running process."; \
 		echo "Try:  pkill -9 node && make nuke"; \
-		echo "Or manually:  rm -rf vendor node_modules web/dist config/project .env"; \
+		echo "Or manually:  rm -rf vendor node_modules web/dist config/project storage/config-deltas storage/logs storage/rebrand storage/runtime .env"; \
 		exit 1; \
 	fi
 	@echo "Nuke complete — run 'make create' or 'make install' to rebuild"

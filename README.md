@@ -14,7 +14,7 @@ An opinionated, interactive Craft CMS 5 starter. Run `make create`, answer a few
 - **Multi-hosting ready** — Servd, Craft Cloud, or self-hosted with plugin-level conditionals
 - **Email transport configured automatically** — Postmark, SMTP (Servd SMTP, Mailgun, etc.), or Mailpit as a safe dev default; written to project config so the CP shows the right value and Servd's sendmail alert never fires
 - **Redis opt-in** — adds `ddev/ddev-redis` addon + `yii2-redis` package + `cache` component override in one choice
-- **Bilingual scaffolding** — English/Arabic with RTL support and per-language favicon generation (opt-out during setup)
+- **Multi-site support** — 1 to N sites with per-site language, URL prefix, and RTL detection. Favicon generation with per-site web manifests
 - **Vite 7 build pipeline** — single `web/dist/` output, Subresource Integrity (SRI), gzip compression, critical CSS with Nginx SSI, and page-specific asset splitting. For per-environment runtime config (Algolia keys, Mapbox tokens, etc.) inject from Twig into `window.__APP_CONFIG__` — do **not** rely on `import.meta.env.VITE_*` baking values into the bundle.
 - **TypeScript-first frontend** — Alpine.js session/UTM store, lazy-loaded Swiper + mmenu + Alpine plugins
 - **Tailwind CSS 4 (CSS-first)** — no `tailwind.config.*` file, theme in `src/css/global.css` via `@theme`
@@ -75,6 +75,7 @@ Run `make` (or `make help`) with no arguments to see a grouped, color-coded list
 | -------------------------- | ------ | ------------------------------------------------- |
 | `make dev`                 |        | Start Vite dev server (HMR)                       |
 | `make prod`                |        | Production build                                  |
+| `make favicons`            |        | Generate favicons from `src/img/favicon.svg`      |
 | `make format`              | `fmt`  | Format everything with Prettier                   |
 | `make kill-vite`           | `kv`   | Kill stuck Vite processes                         |
 | `make launch`              | `l`    | Launch the site in your browser                   |
@@ -234,8 +235,8 @@ Most project configuration is handled automatically. A few things are still manu
 - [ ] Replace brand colors in `src/css/global.css`
 - [ ] Add project fonts to `src/fonts/` and update `global.css`
 - [ ] Update font preloads in `templates/_layouts/base-fonts.twig`
-- [ ] Create favicon source at `src/img/favicon.svg` and run `npm run generate:favicons`
-- [ ] Update CP favicons in `src/cp/favicons/`
+- [ ] Add your favicon to `src/img/favicon.svg` and run `make favicons`
+- [ ] Optionally set `FAVICON_THEME_COLOR` and `FAVICON_BG_COLOR` in `.env` before running
 - [ ] Create `main` / `footer` navigation handles in the CP (Navigation plugin)
 - [ ] Update email template branding in `templates/_emails/system.twig`
 - [ ] Configure critical CSS pages in `vite.config.mjs`

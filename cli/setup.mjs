@@ -270,6 +270,13 @@ async function main() {
 	cleanUnusedTranslations(sites);
 	s.stop('Translations scaffolded');
 
+	// Copy CP rebrand assets (login logo + site icon)
+	const rebrandSrc = `${ROOT}/cli/templates/rebrand`;
+	const rebrandDest = `${ROOT}/storage/rebrand`;
+	if (fs.existsSync(rebrandSrc)) {
+		fs.cpSync(rebrandSrc, rebrandDest, { recursive: true });
+	}
+
 	// Write sites config for the PHP project config script to read
 	const tmpDir = `${ROOT}/cli/tmp`;
 	fs.mkdirSync(tmpDir, { recursive: true });
