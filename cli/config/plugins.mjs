@@ -126,7 +126,7 @@ export const LR_PLUGINS = [
 	{
 		value: 'lindemannrock/craft-logging-library',
 		handle: 'logging-library',
-		version: '^5.0',
+		version: '^5.8',
 		label: 'Logging Library',
 		hint: 'Centralized logging',
 		config: null,
@@ -134,7 +134,7 @@ export const LR_PLUGINS = [
 	{
 		value: 'lindemannrock/craft-redirect-manager',
 		handle: 'redirect-manager',
-		version: '^5.19',
+		version: '^5.29',
 		label: 'Redirect Manager',
 		hint: 'Auto-redirects + analytics',
 		config: 'redirect-manager.php',
@@ -151,7 +151,7 @@ export const LR_PLUGINS = [
 	{
 		value: 'lindemannrock/craft-search-manager',
 		handle: 'search-manager',
-		version: '^5.34',
+		version: '^5.43',
 		label: 'Search Manager',
 		hint: 'Search analytics + synonyms',
 		config: null,
@@ -160,7 +160,7 @@ export const LR_PLUGINS = [
 	{
 		value: 'lindemannrock/craft-shortlink-manager',
 		handle: 'shortlink-manager',
-		version: '^5.8',
+		version: '^5.18',
 		label: 'Shortlink Manager',
 		hint: 'Short links + QR codes',
 		config: 'shortlink-manager.php',
@@ -169,7 +169,7 @@ export const LR_PLUGINS = [
 	{
 		value: 'lindemannrock/craft-smartlink-manager',
 		handle: 'smartlink-manager',
-		version: '^5.0',
+		version: '^5.26',
 		label: 'Smartlink Manager',
 		hint: 'Device-aware smart links',
 		config: null,
@@ -186,7 +186,7 @@ export const LR_PLUGINS = [
 	{
 		value: 'lindemannrock/craft-translation-manager',
 		handle: 'translation-manager',
-		version: '^5.14',
+		version: '^5.23',
 		label: 'Translation Manager',
 		hint: 'Translation management',
 		config: 'translation-manager.php',

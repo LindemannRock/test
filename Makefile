@@ -182,6 +182,12 @@ update-composer: ## Update Composer packages to latest matching versions
 update-npm: ## Update NPM packages (interactive — shows what's available)
 	@$(call require_project, ddev exec npm-check --update)
 
+check-plugins: ## Check plugin registry versions against Packagist
+	@node cli/scripts/check-plugin-versions.mjs
+
+update-plugins: ## Update plugin registry versions (confirms major bumps)
+	@node cli/scripts/check-plugin-versions.mjs --update
+
 clean: ## Remove vendor & node_modules then reinstall
 	@if [ ! -f .env ]; then \
 		echo "No .env file found. Run 'make create' for interactive setup."; \
