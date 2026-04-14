@@ -13,7 +13,7 @@
 import fs from 'fs';
 import path from 'path';
 import { ROOT, CLI_DIR } from '../paths.mjs';
-import { generateSecurityKey, generateAppId, generateIpSalt } from '../utils/crypto.mjs';
+import { generateSecurityKey, generateAppId, generateIpSalt, generateApiKey } from '../utils/crypto.mjs';
 
 const ENV_SOURCE = path.join(CLI_DIR, 'templates', 'env.example');
 const ENV_DEST = path.join(ROOT, '.env');
@@ -111,6 +111,13 @@ export function generateEnvFile({
 		}
 	}
 
+	// Generate Formie REST API keys if plugin is selected
+	if (allPlugins.some((pl) => pl.handle === 'formie-rest-api')) {
+		content = setEnvKey(content, 'FORMIE_API_KEY', quoted(generateApiKey('sk_live')));
+		content = setEnvKey(content, 'FORMIE_API_KEY_LIMITED', quoted(generateApiKey('sk_limited')));
+		content = setEnvKey(content, 'FORMIE_API_KEY_TEST', quoted(generateApiKey('sk_test')));
+	}
+
 	// Remove template site block — we dynamically append all site blocks below
 	content = removeSection(content, '# English Site');
 	content = removeSection(content, '# Arabic Site');
@@ -144,6 +151,8 @@ export function generateEnvFile({
 		{ handle: 'shortlink-manager', section: '# Shortlink Manager' },
 		{ handle: 'smartlink-manager', section: '# Smartlink Manager' },
 		{ handle: 'translation-manager', section: '# Translation Manager' },
+		{ handle: 'formie-rest-api', section: '# Formie REST API' },
+		{ handle: 'formie-sap-integration', section: '# Formie SAP Integration' },
 		{ handle: 'cloudflare', section: '# Cloudflare' },
 		{ handle: 'cloudflare', section: '# Cloudflare Turnstile' },
 	];
