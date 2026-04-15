@@ -9,18 +9,20 @@ An opinionated, interactive Craft CMS 5 starter. Run `make create`, answer a few
 
 ## Features
 
-- **Interactive installer** — `make create` walks you through project name, timezone, language, admin credentials, plugin selection, and hosting with a modern TUI (review loop + per-section editing if you change your mind)
+- **Interactive installer** — `make create` walks you through project name, timezone, language, admin credentials, plugin selection, hosting, and feature toggles with a modern TUI (review loop + per-section editing if you change your mind)
 - **Auto-generated credentials** — Craft security key, app ID, and LR plugin IP salts generated locally, never committed
 - **Multi-hosting ready** — Servd, Craft Cloud, or self-hosted with plugin-level conditionals
 - **Email transport configured automatically** — Postmark, SMTP (Servd SMTP, Mailgun, etc.), or Mailpit as a safe dev default; written to project config so the CP shows the right value and Servd's sendmail alert never fires
 - **Redis opt-in** — adds `ddev/ddev-redis` addon + `yii2-redis` package + `cache` component override in one choice
-- **Multi-site support** — 1 to N sites with per-site language, URL prefix, and RTL detection. Favicon generation with per-site web manifests
-- **Vite 7 build pipeline** — single `web/dist/` output, Subresource Integrity (SRI), gzip compression, critical CSS with Nginx SSI, and page-specific asset splitting. For per-environment runtime config (Algolia keys, Mapbox tokens, etc.) inject from Twig into `window.__APP_CONFIG__` — do **not** rely on `import.meta.env.VITE_*` baking values into the bundle.
+- **Critical CSS opt-in** — slow builds (Chromium-based) are off by default; `make prod` is fast, `make critical` generates above-the-fold CSS when you need it. Declining removes `rollup-plugin-critical` + ~20 Chromium apt packages from DDEV
+- **Multi-site support** — 1 to N sites with per-site language, URL prefix, name, and RTL detection. Sites created via Craft's project-config API, translation files scaffolded per locale, favicon generation with per-site web manifests
+- **Vite 8 build pipeline** — Rolldown-powered (10-30× faster), single `web/dist/` output, Subresource Integrity (SRI), gzip compression, page-specific asset splitting. For per-environment runtime config (Algolia keys, Mapbox tokens, etc.) inject from Twig into `window.__APP_CONFIG__` — do **not** rely on `import.meta.env.VITE_*` baking values into the bundle.
 - **TypeScript-first frontend** — Alpine.js session/UTM store, lazy-loaded Swiper + mmenu + Alpine plugins
 - **Tailwind CSS 4 (CSS-first)** — no `tailwind.config.*` file, theme in `src/css/global.css` via `@theme`
 - **Template hierarchy** — `_boilerplate → base-web → base-html → base → header/footer` with an entry router pattern (`_routerEntries.twig`)
 - **release-please** automated versioning via conventional commits
 - **Prettier + Twig formatting** with the same config used across LR client projects
+- **Consolidated Makefile** — `make help` shows the essential commands; heavy tooling (`make update`, `make registry`, `make db`) opens interactive pickers instead of polluting the help with N sub-targets
 
 ## Requirements
 
@@ -44,16 +46,17 @@ make create
 
 `make create` will:
 
-1. Prompt you for project details, plugins, hosting, and email transport
+1. Prompt you for project details, sites, features (Redis, critical CSS), plugins, hosting, and email transport
 2. Let you review the full configuration and jump back to edit any section
-3. Write `composer.json`, `package.json`, `.ddev/config.yaml`, and `.env`
-4. Start DDEV (plus the Redis add-on if enabled)
-5. Run Composer + NPM installs
-6. Install Craft CMS with your credentials (non-interactive)
-7. Activate all selected plugins
-8. Apply project config and persist your email transport choice
+3. Write `composer.json`, `package.json`, `.ddev/config.yaml`, `.env`, plugin configs, and translation scaffolding
+4. Strip or keep conditional code based on your choices (critical CSS deps, hosting-specific env sections, unused plugin env vars)
+5. Start DDEV (plus the Redis add-on if enabled)
+6. Run Composer + NPM installs
+7. Install Craft CMS with your credentials (non-interactive, idempotent)
+8. Activate all selected plugins
+9. Apply project config and persist your email transport choice
 
-When it finishes you'll see the site URL, CP URL, and login. Run `make dev` to start the Vite dev server.
+When it finishes you'll see the site URL, CP URL, login, and a hint about which commands to run next (`make dev`, `make prod`, `make critical` if enabled).
 
 ## Make commands
 
@@ -74,7 +77,8 @@ Run `make` (or `make help`) with no arguments to see a grouped, color-coded list
 | Command                    | Alias  | Description                                       |
 | -------------------------- | ------ | ------------------------------------------------- |
 | `make dev`                 |        | Start Vite dev server (HMR)                       |
-| `make prod`                |        | Production build                                  |
+| `make prod`                |        | Production build (fast — skips critical CSS)      |
+| `make critical`            |        | Production build + critical CSS (slow — spawns Chromium per page). Only available if you opted in to critical CSS during `make create` |
 | `make favicons`            |        | Generate favicons from `src/img/favicon.svg`      |
 | `make format`              | `fmt`  | Format everything with Prettier                   |
 | `make kill-vite`           | `kv`   | Kill stuck Vite processes                         |
@@ -91,23 +95,47 @@ Run `make` (or `make help`) with no arguments to see a grouped, color-coded list
 
 ### Maintenance
 
+Three commands open interactive pickers so you don't have to remember sub-target names. Direct sub-targets are still callable (documented under each picker below).
+
 | Command                 | Description                                                |
 | ----------------------- | ---------------------------------------------------------- |
 | `make up`               | Apply project config + run pending migrations              |
-| `make update`           | Run `craft update all` (Craft + plugins via Craft updater) |
-| `make update-composer`  | Update Composer packages to latest matching versions       |
-| `make update-npm`       | Update NPM packages (interactive via `npm-check`)          |
-| `make update-cli`       | Update CLI packages in `cli/` (interactive)                |
-| `make check-plugins`    | Check plugin registry versions against Packagist           |
-| `make update-plugins`   | Interactively update plugin registry versions              |
-| `make add-plugin`       | Add a new plugin to the registry (searches Packagist)      |
-| `make fetch-configs`    | Fetch default `config.php` for registered plugins          |
+| `make update`           | Interactive picker — Craft / Composer / Frontend / CLI / All |
+| `make registry`         | Maintain the plugin list offered by `make create` (check / update / add / fetch configs) |
+| `make db`               | Database picker — pull from Servd / export / import        |
 | `make clean`            | Remove vendor & node_modules then reinstall                |
 | `make clean-logs`       | Remove `storage/logs/*.log`                                |
-| `make export-db`        | Export local DB to `db.sql.gz` (or `file=path/to/out.sql.gz`) |
-| `make import-db`        | Import `db.sql.gz` (or `file=path/to/dump.sql.gz`)         |
-| `make pull-db`          | Pull database from Servd (Servd hosting only)              |
 | `make reindex-search`   | Rebuild the search index                                   |
+
+#### `make update` sub-targets (hidden from help, still callable)
+
+| Command                 | Description                                                |
+| ----------------------- | ---------------------------------------------------------- |
+| `make update-craft`     | `craft update all` — Craft CMS + plugins via Craft's updater |
+| `make update-composer`  | `composer update` — latest matching versions              |
+| `make update-npm`       | Frontend packages in project `node_modules/` (via `npm-check`) |
+| `make update-cli`       | CLI scaffolding packages in `cli/node_modules/`           |
+
+Tip: pick "Craft CMS + plugins" in the picker to get Craft's native interactive flow (pick a specific plugin handle, or update all).
+
+#### `make registry` sub-targets (hidden)
+
+| Command                       | Description                                    |
+| ----------------------------- | ---------------------------------------------- |
+| `make registry-plugins-check` | Compare registry versions against Packagist   |
+| `make registry-plugins-update`| Apply version bumps (confirms major bumps)    |
+| `make registry-plugins-add`   | Search Packagist + add a plugin to the registry |
+| `make registry-plugins-fetch` | Pull default `config.php` from each plugin's GitHub repo |
+
+#### `make db` sub-targets (hidden)
+
+| Command                          | Description                                    |
+| -------------------------------- | ---------------------------------------------- |
+| `make db-pull`                   | Pull from Servd (Servd hosting only — hidden from picker when not installed) |
+| `make db-export [file=path]`     | Export local DB (default: `db.sql.gz`)        |
+| `make db-import [file=path]`     | Import a SQL dump (default: `db.sql.gz`)      |
+
+The `db-export` picker asks whether it's a disposable working dump (`.sql.gz`, git-ignored) or a seed DB (`.sql.gzip`, committed) and sets the extension accordingly.
 
 ### Destructive (asks for confirmation)
 
@@ -121,15 +149,20 @@ Run `make` (or `make help`) with no arguments to see a grouped, color-coded list
 ```
 craft-starter/
 ├── cli/                   Interactive installer (Node ESM)
-│   ├── setup.mjs          Orchestrator
+│   ├── setup.mjs          Orchestrator for `make create`
 │   ├── config/            Static data (plugin registry, languages)
 │   ├── prompts/           @clack/prompts + @inquirer/search flows
-│   ├── actions/           File mutations (composer, env, ddev, etc.)
-│   ├── utils/             Shared helpers (run, crypto, cancel, validate)
-│   ├── scripts/           Standalone PHP scripts run inside DDEV
+│   ├── actions/           File mutations (composer, env, ddev, critical, plugins, sites)
+│   ├── utils/             Shared helpers (run, crypto, cancel, validate, preflight)
+│   ├── scripts/           Standalone scripts (PHP via DDEV, Node on host):
+│   │                      configure-project.php, generate-favicons.mjs,
+│   │                      add-plugin.mjs, check-plugin-versions.mjs,
+│   │                      fetch-plugin-configs.mjs, update.mjs, registry.mjs, db.mjs
 │   └── templates/         Source files copied/read by the CLI
 │       ├── env.example    The .env template
-│       └── plugins/       Per-plugin config.php templates
+│       ├── plugins/       Per-plugin config.php templates
+│       ├── translations/  Translation scaffold (copied per site/locale)
+│       └── rebrand/       CP rebrand assets (login logo + site icon)
 ├── config/
 │   ├── app.php            Only the `cache` component override
 │   ├── general.php        Project-wide constants (no env-overridable settings — use CRAFT_* in .env)
@@ -137,7 +170,7 @@ craft-starter/
 │   └── vite.php           nystudio107/craft-vite config
 ├── src/                   Frontend: css, js, brand, cp, fonts, icons, img
 ├── templates/             Twig templates (_boilerplate → base → pages)
-├── translations/          Per-locale site translations (en, ar)
+├── translations/          Per-locale site translations (scaffolded per site)
 ├── web/                   Public web root (index.php)
 ├── Makefile               DX entry point
 └── DEPLOYMENT.md          Per-environment config reference
@@ -147,7 +180,7 @@ craft-starter/
 
 - **[Craft CMS 5.9+](https://craftcms.com)** — Content management system
 - **[DDEV](https://ddev.com)** — Local development environment (nginx-fpm, PHP 8.3, MySQL 8.0)
-- **[Vite 7](https://vitejs.dev)** — Frontend build tool with HMR
+- **[Vite 8](https://vitejs.dev)** — Rolldown-powered frontend build tool with HMR
 - **[Tailwind CSS 4](https://tailwindcss.com)** — Utility-first CSS (CSS-first, no config file)
 - **[Alpine.js 3](https://alpinejs.dev)** — Reactive UI
 - **[TypeScript](https://www.typescriptlang.org)** — Type-safe JavaScript
@@ -233,6 +266,58 @@ The CLI generates `.env` from `cli/templates/env.example` on every run. For loca
 
 Craft's built-in settings use `CRAFT_*` env vars (`CRAFT_DEV_MODE`, `CRAFT_TIMEZONE`, `CRAFT_CP_TRIGGER`, `CRAFT_IS_SYSTEM_LIVE`, etc.) which Craft auto-reads into `GeneralConfig`. Project config values use `SYSTEM_*` env vars (`SYSTEM_NAME`, `SYSTEM_EMAIL`, etc.) referenced as `$VAR` in YAML. We don't re-read `CRAFT_*` vars in `general.php` — **one source of truth per setting**.
 
+## What `make create` does differently based on your choices
+
+The installer tailors the project to your selections so you don't end up with dead dependencies or unused config. Noteworthy conditional behaviors:
+
+### Critical CSS
+
+- **Opted in** → `rollup-plugin-critical` kept in `package.json`, ~20 Chromium apt packages added to `.ddev/config.yaml`, `.ddev/config.m1.yaml` present (native Chromium on Apple Silicon), full `critical-css.twig` partial with Nginx SSI + cookie logic, `GENERATE_CRITICAL_CSS=true` in `.env`, `make critical` works
+- **Declined** → all of the above stripped. `make prod` is the fast path; `make critical` refuses with a clear re-enable message
+- **Flip-flopping** (re-running `make create` and changing your mind) is idempotent in both directions
+
+### Sites (multi-site)
+
+- Prompts for how many sites, then per-site: handle, language, URL prefix, display name, label
+- Sites are created via Craft's project-config API (`projectConfig->set()`) — not via YAML patching — with env-var references for `name` and `baseUrl`
+- Translation files are scaffolded per locale under `translations/{lang}/` from `cli/templates/translations/`
+- Language switcher markup renders as a toggle button for 2 sites, Alpine.js dropdown for 3+
+- RTL detection is language-based (`ar`, `he`, `fa`, `ur`) — no hardcoded `isArabic` checks
+
+### Translation Manager (LR plugin)
+
+- Prompts for a **translation category** (default `messages`). Patches `config/translation-manager.php` and rewrites `templates/_layouts/global-variables.twig` so `{% set primaryTranslationCategory = '...' %}` uses your chosen value
+- Sets `sourceLanguage` in the plugin config to your primary site's language
+- AI API keys (OpenAI, Gemini, Anthropic) read via `App::env()` — kept out of hard-coded config
+
+### Redis
+
+- **Enabled** → `ddev/ddev-redis` addon installed before `ddev start`, `yiisoft/yii2-redis` added to composer, Redis env vars kept in `.env`, cache component override wired up
+- **Disabled** → Craft's default file-based cache, Redis env vars stripped from `.env`
+
+### Hosting
+
+- **Servd** → `servd/craft-asset-storage` installed, credentials + base URL prompted, optional custom CDN/image-transform domains, `SERVD_BASE_URL` auto-derived from project slug. Servd sub-prompt also offers Postmark/SMTP as email fallback
+- **Craft Cloud** → `craftcms/cloud` installed, `craft-cloud.yaml` generated (PHP 8.3, Node 22, `npm run build`), `CRAFT_RUN_QUEUE_AUTOMATICALLY=false` (Cloud runs its own workers)
+- **None / self-hosted** → no hosting plugin, Servd section removed from `.env`
+
+### Email transport
+
+Configured in project config at install time via `cli/scripts/configure-project.php`, picked in this order:
+
+1. **Postmark** if `POSTMARK_TOKEN` set + plugin installed
+2. **Generic SMTP** if `SMTP_HOSTNAME` set
+3. **Mailpit** (DDEV local) as dev default
+4. **Sendmail** as Craft's fallback
+
+No `mailer` component override in `config/app.php` — single source of truth in project config means the CP shows the right value and Servd's sendmail alert never fires.
+
+### Auto-added plugin dependencies
+
+- Any **Formie addon** (e.g. Formie SMS) → Formie itself is auto-added
+- **Formie SMS** → SMS Manager is auto-added
+- Auto-added plugins are labelled `(req. by X)` in the confirmation summary
+
 ## After `make create`
 
 Most project configuration is handled automatically. A few things are still manual because they depend on assets you provide:
@@ -244,7 +329,7 @@ Most project configuration is handled automatically. A few things are still manu
 - [ ] Optionally set `FAVICON_THEME_COLOR` and `FAVICON_BG_COLOR` in `.env` before running
 - [ ] Create `main` / `footer` navigation handles in the CP (Navigation plugin)
 - [ ] Update email template branding in `templates/_emails/system.twig`
-- [ ] Configure critical CSS pages in `vite.config.mjs`
+- [ ] If critical CSS is enabled, configure which pages to generate it for in `vite.config.mjs` (default: home + about)
 
 ## Support
 
