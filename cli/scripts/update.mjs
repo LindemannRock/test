@@ -1,0 +1,73 @@
+#!/usr/bin/env node
+
+/**
+ * Interactive update picker — single entry point replacing the scattered
+ * `make update-*` targets. Runs on the host (not inside DDEV) and shells out
+ * to the right command per selection.
+ *
+ * For Craft itself we delegate to `craft update` (no args) so the user gets
+ * Craft's native interactive flow with the real list of available updates —
+ * no point reinventing it.
+ *
+ * @copyright 2026 LindemannRock
+ * @license MIT
+ */
+
+import * as p from '@clack/prompts';
+import pc from 'picocolors';
+import { spawn } from 'child_process';
+import { cancel } from '../utils/cancel.mjs';
+
+const TARGETS = [
+	{ value: 'craft',    label: 'Craft CMS + plugins', hint: 'interactive — pick what to update' },
+	{ value: 'composer', label: 'Composer packages',    hint: 'composer update' },
+	{ value: 'npm',      label: 'Frontend packages',    hint: 'vite, tailwind, alpine, etc. (npm-check)' },
+	{ value: 'cli',      label: 'CLI tooling',          hint: 'scaffolding packages in cli/ (npm-check)' },
+	{ value: 'all',      label: 'Everything',           hint: 'Craft + plugins + Composer + Frontend + CLI' },
+];
+
+function runShell(command, args) {
+	return new Promise((resolve, reject) => {
+		const child = spawn(command, args, { stdio: 'inherit' });
+		child.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`${command} ${args.join(' ')} exited ${code}`))));
+	});
+}
+
+async function runTarget(target, { interactive = true } = {}) {
+	if (target === 'craft' && interactive) {
+		// Delegate to Craft's native interactive update flow
+		p.log.step('ddev exec php craft update');
+		await runShell('ddev', ['exec', 'php', 'craft', 'update']);
+		return;
+	}
+	p.log.step(`make update-${target}`);
+	await runShell('make', [`update-${target}`]);
+}
+
+async function main() {
+	p.intro(pc.bgCyan(pc.black(' Update ')));
+
+	const choice = await p.select({
+		message: 'What would you like to update?',
+		options: TARGETS,
+	});
+	if (p.isCancel(choice)) cancel();
+
+	const isAll = choice === 'all';
+	const order = isAll ? ['craft', 'composer', 'npm', 'cli'] : [choice];
+	for (const t of order) {
+		try {
+			await runTarget(t, { interactive: !isAll });
+		} catch (err) {
+			p.log.error(err.message);
+			process.exit(1);
+		}
+	}
+
+	p.outro(pc.green('Done.'));
+}
+
+main().catch((err) => {
+	console.error(err);
+	process.exit(1);
+});

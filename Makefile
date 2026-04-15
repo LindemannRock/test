@@ -1,5 +1,6 @@
 .PHONY: help create install start dev prod critical favicons reset nuke \
-	clean clean-logs update update-composer update-npm up npm-install kill-vite \
+	clean clean-logs update update-craft update-composer update-npm update-cli \
+	up npm-install kill-vite \
 	pull-db export-db import-db reindex-search \
 	launch tableplus mailpit keys format share funnel \
 	l tp mp fmt kv
@@ -132,11 +133,19 @@ prod: ## Production build (fast — skips critical CSS)
 	fi
 
 critical: ## Production build with critical CSS (slow — spawns Chromium per page)
-	@if ! grep -q '^GENERATE_CRITICAL_CSS=' .env 2>/dev/null; then \
-	  echo "Critical CSS not enabled in this project. Set GENERATE_CRITICAL_CSS=true in .env and re-run."; \
-	  exit 1; \
+	@if ! grep -q '"rollup-plugin-critical"' package.json 2>/dev/null; then \
+	  echo "Critical CSS was not selected during 'make create' — rollup-plugin-critical is not installed."; \
+	  echo "To enable:"; \
+	  echo "  1. Add to package.json devDependencies:  \"rollup-plugin-critical\": \"^1.0.15\""; \
+	  echo "  2. Add to .env:                          GENERATE_CRITICAL_CSS=true"; \
+	  echo "  3. Run:                                  make npm-install"; \
+	elif ! grep -q '^GENERATE_CRITICAL_CSS=' .env 2>/dev/null; then \
+	  echo "GENERATE_CRITICAL_CSS is not set in .env. Add 'GENERATE_CRITICAL_CSS=true' and re-run."; \
+	elif grep -qE '^GENERATE_CRITICAL_CSS=(false|0|no)$$' .env 2>/dev/null; then \
+	  echo "GENERATE_CRITICAL_CSS is disabled in .env. Set it to 'true' and re-run."; \
+	else \
+	  $(call require_project, ddev exec env GENERATE_CRITICAL_CSS=true npm run build) \
 	fi
-	@$(call require_project, ddev exec env GENERATE_CRITICAL_CSS=true npm run build)
 
 favicons: ## Generate site favicons from src/img/favicon.svg
 	@$(call require_project, ddev exec bash -c 'cd cli && node scripts/generate-favicons.mjs')
@@ -184,16 +193,20 @@ funnel: ## Share publicly via Tailscale Funnel (no Tailscale on test device)
 up: ## Apply project config + run pending migrations
 	@$(call require_project, ddev exec php craft up --interactive=0)
 
-update: ## Run `craft update all` (updates Craft + plugins via Craft's updater)
+update: ## Interactive update picker (Craft / Composer / NPM / CLI / All)
+	@node cli/scripts/update.mjs
+
+# Hidden (no `##` description) — still callable, invoked by the picker above.
+update-craft:
 	@$(call require_project, ddev exec php craft update all)
 
-update-composer: ## Update Composer packages to latest matching versions
+update-composer:
 	@$(call require_project, ddev composer update)
 
-update-npm: ## Update NPM packages (interactive — shows what's available)
-	@$(call require_project, ddev exec npm-check --update)
+update-npm:
+	@$(call require_project, ddev exec npx npm-check --update)
 
-update-cli: ## Update CLI packages in cli/ (interactive)
+update-cli:
 	@cd cli && npm run update
 
 check-plugins: ## Check plugin registry versions against Packagist
