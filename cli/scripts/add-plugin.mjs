@@ -86,49 +86,61 @@ p.intro(pc.bgCyan(pc.black(' Add Plugin to Registry ')));
 // Check if already registered
 const allExisting = [...LR_PLUGINS.map((pl) => pl.value), ...THIRD_PARTY_PLUGINS.map((pl) => pl.value)];
 
-// Search
-const query = await p.text({
-	message: 'Search Packagist for a Craft plugin',
-	placeholder: 'seomatic',
-	validate: (v) => {
-		if (!v) return 'Enter a search term';
-	},
-});
-if (p.isCancel(query)) process.exit(0);
-
+// Search loop — lets the user re-query without restarting the whole command
 const s = p.spinner();
-s.start('Searching Packagist');
-const rawResults = await searchPackagist(query);
-const results = rawResults.filter((r) => !allExisting.includes(r.name));
-const filtered = rawResults.length - results.length;
-s.stop(`Found ${results.length} new result${results.length === 1 ? '' : 's'}${filtered > 0 ? ` (${filtered} already in registry)` : ''}`);
+let packageName;
+let details;
+while (true) {
+	const query = await p.text({
+		message: 'Search Packagist for a Craft plugin',
+		placeholder: 'seomatic',
+		validate: (v) => {
+			if (!v) return 'Enter a search term';
+		},
+	});
+	if (p.isCancel(query)) process.exit(0);
 
-if (results.length === 0) {
-	p.outro(rawResults.length > 0
-		? pc.yellow('All matching packages are already registered.')
-		: pc.yellow('No Craft plugins found. Try a different search term.'));
-	process.exit(0);
-}
+	s.start('Searching Packagist');
+	const rawResults = await searchPackagist(query);
+	const results = rawResults.filter((r) => !allExisting.includes(r.name));
+	const filtered = rawResults.length - results.length;
+	s.stop(`Found ${results.length} new result${results.length === 1 ? '' : 's'}${filtered > 0 ? ` (${filtered} already in registry)` : ''}`);
 
-// Select package
-const packageName = await p.select({
-	message: 'Select a package',
-	options: results.slice(0, 10).map((r) => ({
-		value: r.name,
-		label: r.name,
-		hint: r.description?.slice(0, 60) || '',
-	})),
-});
-if (p.isCancel(packageName)) process.exit(0);
+	if (results.length === 0) {
+		p.log.warn(rawResults.length > 0
+			? 'All matching packages are already registered.'
+			: 'No Craft plugins found. Try a different search term.');
+		continue;
+	}
 
-// Fetch details
-s.start('Fetching package details');
-const details = await getPackageDetails(packageName);
-s.stop('Details fetched');
+	const choice = await p.select({
+		message: 'Select a package',
+		options: [
+			...results.slice(0, 10).map((r) => ({
+				value: r.name,
+				label: r.name,
+				hint: r.description?.slice(0, 60) || '',
+			})),
+			{ value: '__search__', label: pc.dim('Search again'), hint: 'try a different query' },
+			{ value: '__cancel__', label: pc.dim('Cancel') },
+		],
+	});
+	if (p.isCancel(choice) || choice === '__cancel__') {
+		p.outro('Cancelled.');
+		process.exit(0);
+	}
+	if (choice === '__search__') continue;
 
-if (!details) {
-	p.outro(pc.red('Could not fetch package details.'));
-	process.exit(1);
+	s.start('Fetching package details');
+	details = await getPackageDetails(choice);
+	s.stop('Details fetched');
+
+	if (!details) {
+		p.log.warn('Could not fetch package details. Pick another.');
+		continue;
+	}
+	packageName = choice;
+	break;
 }
 
 const latestVersion = details.version.replace(/^v/, '');

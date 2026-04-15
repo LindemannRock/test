@@ -1,5 +1,6 @@
 .PHONY: help create install start dev prod critical favicons reset nuke \
 	clean clean-logs update update-craft update-composer update-npm update-cli \
+	registry registry-plugins-check registry-plugins-update registry-plugins-add registry-plugins-fetch \
 	up npm-install kill-vite \
 	pull-db export-db import-db reindex-search \
 	launch tableplus mailpit keys format share funnel \
@@ -209,16 +210,21 @@ update-npm:
 update-cli:
 	@cd cli && npm run update
 
-check-plugins: ## Check plugin registry versions against Packagist
+registry: ## Manage the starter's registries (plugins today; themes etc. later)
+	@node cli/scripts/registry.mjs
+
+# Hidden (no `##` description) — still callable, invoked by the picker above.
+# Naming: registry-<resource>-<action>  e.g. registry-plugins-check, registry-themes-add (future)
+registry-plugins-check:
 	@node cli/scripts/check-plugin-versions.mjs
 
-update-plugins: ## Update plugin registry versions (confirms major bumps)
+registry-plugins-update:
 	@node cli/scripts/check-plugin-versions.mjs --update
 
-add-plugin: ## Add a new plugin to the registry (searches Packagist)
+registry-plugins-add:
 	@node cli/scripts/add-plugin.mjs
 
-fetch-configs: ## Fetch default config.php for registered plugins from GitHub
+registry-plugins-fetch:
 	@node cli/scripts/fetch-plugin-configs.mjs
 
 clean: ## Remove vendor & node_modules then reinstall
