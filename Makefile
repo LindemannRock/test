@@ -184,10 +184,10 @@ kv: kill-vite
 ##@ Device testing (Tailscale)
 
 share: ## Share over your Tailnet (test device needs Tailscale)
-	@$(call require_project, ddev tailscale-share)
+	@$(call require_project, ddev tailscale-share || true)
 
 funnel: ## Share publicly via Tailscale Funnel (no Tailscale on test device)
-	@$(call require_project, ddev tailscale-funnel)
+	@$(call require_project, ddev tailscale-funnel || true)
 
 ##@ Maintenance
 
