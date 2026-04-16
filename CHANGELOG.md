@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/LindemannRock/test/compare/v1.0.0...v1.1.0) (2026-04-16)
+
+
+### Features
+
+* add Craft Cloud configuration ([3373195](https://github.com/LindemannRock/test/commit/337319552106f32b8eeb05669dd542eb8ced3d10))
+
 ## [1.0.0](https://github.com/LindemannRock/test/compare/v5.0.1...v1.0.0) (2026-04-16)
 
 
