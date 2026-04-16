@@ -195,7 +195,9 @@ up: ## Apply project config + run pending migrations
 	@$(call require_project, ddev exec php craft up --interactive=0)
 
 verify: ## Scan .env for unfilled placeholders (run before deploy)
-	@node cli/scripts/verify.mjs
+	@# Swallow the exit code for friendly interactive output.
+	@# For CI gating, call the script directly: `node cli/scripts/verify.mjs`
+	@node cli/scripts/verify.mjs || true
 
 update: ## Interactive update picker (Craft / Composer / NPM / CLI / All)
 	@node cli/scripts/update.mjs
