@@ -48,8 +48,8 @@
 		"typescript": "^6.0.2",
 		"vite": "^8.0.8",
 		"vite-plugin-compression": "^0.5.1",
-		"vite-plugin-manifest-sri": "^0.2.0",
-		"vite-plugin-restart": "^2.0.0"
+		"vite-plugin-full-reload": "^1.2.0",
+		"vite-plugin-manifest-sri": "^0.2.0"
 	},
 	"dependencies": {
 		"@alpinejs/collapse": "^3.14.9",

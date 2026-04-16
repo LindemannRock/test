@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import manifestSRI from 'vite-plugin-manifest-sri';
-import ViteRestart from 'vite-plugin-restart';
+import fullReload from 'vite-plugin-full-reload';
 import viteCompression from 'vite-plugin-compression';
 import { visualizer } from 'rollup-plugin-visualizer';
 import copy from 'rollup-plugin-copy';
@@ -139,9 +139,7 @@ export default defineConfig(async ({ command, mode }) => {
 				flatten: false,
 			}),
 			criticalPlugin,
-			ViteRestart({
-				restart: ['./templates/**/*', './src/**/*', './translations/**/*', './config/*'],
-			}),
+			fullReload(['./templates/**/*', './translations/**/*', './config/*'], { always: true }),
 			viteCompression({
 				filter: /\.(js|mjs|json|css|map)$/i,
 			}),
