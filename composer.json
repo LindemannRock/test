@@ -31,9 +31,6 @@
 		},
 		"sort-packages": true,
 		"optimize-autoloader": true,
-		"audit": {
-			"ignore": ["PKSA-7h5p-prw9-w5nr"]
-		},
 		"platform": {
 			"php": "8.3"
 		}
