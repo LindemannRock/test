@@ -291,7 +291,7 @@ export const THIRD_PARTY_PLUGINS = [
 		handle: 'scout',
 		version: '^5.0',
 		label: 'Scout',
-		hint: 'Craft Scout provides a simple solution for adding ',
+		hint: 'Search indexing (Algolia, Elasticsearch, etc.)',
 		config: 'scout.php',
 	},
 ];
