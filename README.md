@@ -397,17 +397,15 @@ The starter ships with a [release-please](https://github.com/googleapis/release-
 
 ### Setup after forking
 
-1. **Create a `RELEASE_TOKEN` secret** in your repo's Settings → Secrets → Actions. Use a fine-grained PAT with `contents: write` + `pull-requests: write` on your repo. A PAT is required (not the default `GITHUB_TOKEN`) so the release PR can re-trigger workflows — important if you chain deploys off release events.
+1. **Enable Actions on the fork.** When you fork a repo with workflow files, GitHub disables them by default. Go to the Actions tab → click _"I understand my workflows, go ahead and enable them"_.
 
-   *Alternative:* if you don't need to trigger other workflows, simplify the step to:
-   ```yaml
-   - uses: googleapis/release-please-action@v4
-     with:
-       release-type: node
-   ```
-   (drop the `token:` line — it falls back to the built-in `GITHUB_TOKEN`)
+2. **Check workflow permissions.** Settings → Actions → General → Workflow permissions:
+   - Select **"Read and write permissions"**
+   - Check **"Allow GitHub Actions to create and approve pull requests"**
 
-2. **Bootstrap your initial version** by committing with the `Release-As:` trailer:
+   These two settings let release-please open PRs and write tags/releases using the built-in `GITHUB_TOKEN` — **no personal access token needed**.
+
+3. **Bootstrap your initial version** by committing with the `Release-As:` trailer:
    ```bash
    git commit --allow-empty -m "chore: bootstrap release-please" -m "Release-As: 1.0.0"
    git push
@@ -424,6 +422,16 @@ The starter ships with a [release-please](https://github.com/googleapis/release-
 | `chore:` / `docs:` / `refactor:` / `test:` | none | (no release, shows in changelog under "Other" if scoped) |
 
 Scopes (`feat(cli):`, `fix(Makefile):`) group related changes in the generated CHANGELOG and make release notes easier to scan. The starter's own history is a live example — see [commit log](https://github.com/LindemannRock/craft-starter/commits/main).
+
+### Advanced: chaining workflows off releases
+
+GitHub intentionally blocks workflows triggered by `GITHUB_TOKEN` from firing other workflows (prevents infinite loops). If you have a `deploy.yml` that runs on `on: release: published` and you want it to fire when release-please publishes a release, use a personal access token:
+
+1. Create a fine-grained PAT with `contents: write` + `pull-requests: write` on your repo
+2. Save it as a repo secret named `RELEASE_TOKEN`
+3. Add `token: ${{ secrets.RELEASE_TOKEN }}` back to the release-please step
+
+Without a PAT, releases are still tagged and published — they just won't trigger other workflows.
 
 ## Support
 
