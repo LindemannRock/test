@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.3](https://github.com/LindemannRock/test/compare/v1.1.2...v1.1.3) (2026-04-16)
+
+
+### Bug Fixes
+
+* **deploy:** replace vite-plugin-restart with vite-plugin-full-reload ([1428ea9](https://github.com/LindemannRock/test/commit/1428ea9db1d829d9f744b745a9ef1eb4aad2f5ec))
+* **deploy:** swap vite-plugin-restart for vite-plugin-full-reload (Vite 8 compat) ([3bfddf0](https://github.com/LindemannRock/test/commit/3bfddf0933fff6ed4a56c48d0ed6dd8b1b34ea6b))
+
 ## [1.1.2](https://github.com/LindemannRock/test/compare/v1.1.1...v1.1.2) (2026-04-16)
 
 
