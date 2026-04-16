@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/LindemannRock/test/compare/v1.1.0...v1.1.1) (2026-04-16)
+
+
+### Bug Fixes
+
+* add lock files for release ([5c11b7a](https://github.com/LindemannRock/test/commit/5c11b7a2138f1c1819c0f3e0c680616c1fe700dd))
+
 ## [1.1.0](https://github.com/LindemannRock/test/compare/v1.0.0...v1.1.0) (2026-04-16)
 
 
