@@ -33,6 +33,7 @@ import { updateComposer } from './actions/composer.mjs';
 import { updatePackageJson } from './actions/packageJson.mjs';
 import { updateDdevConfig } from './actions/ddev.mjs';
 import { applyCriticalCssChoice } from './actions/critical.mjs';
+import { stripStarterOnlyIgnores } from './actions/gitignore.mjs';
 import { generateEnvFile } from './actions/env.mjs';
 import { writePluginConfigs, cleanUnusedPluginConfigs } from './actions/plugins.mjs';
 import { scaffoldTranslations, cleanUnusedTranslations } from './actions/sites.mjs';
@@ -213,6 +214,11 @@ async function main() {
 	s.start('Applying critical-CSS choice');
 	applyCriticalCssChoice(useCritical);
 	s.stop('Critical-CSS choice applied');
+
+	s.start('Updating .gitignore');
+	stripStarterOnlyIgnores();
+	s.stop('.gitignore updated — lock files now trackable');
+	p.log.info('composer.lock + package-lock.json will be committed — required for reproducible deploys (Craft Cloud, Servd, CI).');
 
 	s.start('Generating .env');
 	generateEnvFile({ project, sites, servdCredentials, postmarkToken, smtpCredentials, useRedis, useCritical, selectedLr, selectedTp, selectedHosting });

@@ -315,9 +315,10 @@ nuke: ## Destroy DDEV + vendor + node_modules + dist + config/project + .env
 	@# - config/vite.php: criticalPath/criticalSuffix lines toggled by critical choice
 	@# - critical-css.twig: partial swapped by critical choice
 	@# - global-variables.twig: primaryTranslationCategory patched by Translation Manager prompt
+	@# - .gitignore: lock-file section stripped when scaffolding a downstream project
 	@# Canonical copies live in git HEAD for the starter repo + cli/templates/critical/
 	@# for project repos that may commit a declined state.
-	@git checkout .ddev/config.yaml .ddev/config.m1.yaml config/vite.php templates/_boilerplate/_partials/critical-css.twig templates/_layouts/global-variables.twig 2>/dev/null || true
+	@git checkout .ddev/config.yaml .ddev/config.m1.yaml config/vite.php templates/_boilerplate/_partials/critical-css.twig templates/_layouts/global-variables.twig .gitignore 2>/dev/null || true
 	@# Remove scaffolded translations (template lives in cli/templates/translations/)
 	@find translations -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} + 2>/dev/null || true
 	@# Remove CLI temp files
