@@ -32,7 +32,7 @@ An opinionated, interactive Craft CMS 5 starter. Run `make create`, answer a few
 
 ### Optional
 
-- [Tailscale](https://tailscale.com) — only if you want `make share` / `make funnel` for device testing. Free for personal use. Install with `brew install tailscale` on macOS or see [their docs](https://tailscale.com/download) for other platforms.
+- [Tailscale](https://tailscale.com) — only if you want `make share` / `make funnel` for device testing. Free for personal use. See the [Device testing](#device-testing) section below for install details (app cask vs. CLI).
 
 > The `make create` installer checks that Docker, DDEV, and Node are present before running. If any are missing you'll get a clean error with install links.
 
@@ -196,25 +196,41 @@ craft-starter/
 
 | Plugin | Purpose |
 |--------|---------|
+| [Campaign Manager](https://github.com/LindemannRock/craft-campaign-manager) | SMS, email, and WhatsApp campaigns |
+| [Code Highlighter](https://github.com/LindemannRock/craft-code-highlighter) | Syntax highlighting (Prism.js) |
+| [Component Manager](https://github.com/LindemannRock/craft-component-manager) | Advanced component management |
+| [Formie Booking Slot](https://github.com/LindemannRock/craft-formie-booking-slot-field) | Date/time slot selection for Formie |
+| [Formie Paragraph](https://github.com/LindemannRock/craft-formie-paragraph-field) | Multi-line paragraph field for Formie |
+| [Formie Rating](https://github.com/LindemannRock/craft-formie-rating-field) | Star/emoji/numeric rating for Formie |
+| [Formie REST API](https://github.com/LindemannRock/craft-formie-rest-api) | REST + GraphQL API for Formie |
+| [Formie SAP Integration](https://github.com/LindemannRock/craft-formie-sap-integration) | Send Formie submissions to SAP Cloud |
+| [Formie SMS](https://github.com/LindemannRock/craft-formie-sms) | SMS notifications for Formie (auto-adds SMS Manager) |
+| [Icon Manager](https://github.com/LindemannRock/craft-icon-manager) | SVG + icon font management |
+| [Logging Library](https://github.com/LindemannRock/craft-logging-library) | Centralized logging |
 | [Redirect Manager](https://github.com/LindemannRock/craft-redirect-manager) | Auto-redirects + privacy-preserving analytics |
+| [Report Manager](https://github.com/LindemannRock/craft-report-manager) | Report generation + analytics |
+| [Search Manager](https://github.com/LindemannRock/craft-search-manager) | Search analytics + synonyms |
 | [Shortlink Manager](https://github.com/LindemannRock/craft-shortlink-manager) | Short links with QR codes + analytics |
 | [Smartlink Manager](https://github.com/LindemannRock/craft-smartlink-manager) | Device-aware smart links |
-| [Search Manager](https://github.com/LindemannRock/craft-search-manager) | Multi-backend search with BM25 ranking |
-| [Translation Manager](https://github.com/LindemannRock/craft-translation-manager) | Translation management |
-| [Logging Library](https://github.com/LindemannRock/craft-logging-library) | Centralized logging |
+| [SMS Manager](https://github.com/LindemannRock/craft-sms-manager) | SMS gateway (multi-provider) |
+| [Translation Manager](https://github.com/LindemannRock/craft-translation-manager) | Translation management (prompts for category name during `make create`) |
 
 ### Third-party (opt-in during `make create`)
 
 | Plugin | Purpose |
 |--------|---------|
 | [SEOmatic](https://nystudio107.com/plugins/seomatic) | SEO management |
-| [Formie](https://verbb.io/craft-plugins/formie) | Form builder |
+| [Formie](https://verbb.io/craft-plugins/formie) | Form builder (auto-added when any Formie addon is selected) |
 | [Navigation](https://verbb.io/craft-plugins/navigation) | Navigation management |
 | [Expanded Singles](https://github.com/verbb/expanded-singles) | Singles as direct sidebar links |
 | [Imager X](https://plugins.craftcms.com/imager-x) | Image transforms |
 | [Postmark](https://github.com/craftcms/postmark) | Email transport |
 | [Sprig](https://putyourlightson.com/plugins/sprig) | Reactive Twig components |
+| [Scout](https://plugins.craftcms.com/scout) | Search indexing (Algolia, Elasticsearch, etc.) |
+| [Cloudflare](https://putyourlightson.com/plugins/cloudflare) | Purge Cloudflare cache from Craft |
 | [CP CSS](https://plugins.craftcms.com/cpcss) · [CP JS](https://plugins.craftcms.com/cpjs) · [CP Clear Cache](https://plugins.craftcms.com/cp-clearcache) | Control panel niceties |
+
+> Updating the list: run `make registry` → _Update versions_ to pull latest from Packagist (major bumps prompt for confirmation). Add new plugins with `make registry` → _Add a plugin_.
 
 ### Hosting
 
@@ -233,17 +249,35 @@ craft-starter/
 
 Test your dev site on real phones and tablets via [Tailscale](https://tailscale.com) — optional, only needed if you use `make share` / `make funnel`.
 
-**Prerequisites:** install Tailscale and sign in on your dev machine first.
+### Install Tailscale
+
+Two options on macOS. Pick one:
+
+**1. App cask (recommended — GUI + auto-start)**
 
 ```bash
-brew install tailscale         # macOS
-sudo tailscale up              # sign in (follow the URL it prints)
+brew install --cask tailscale-app
 ```
 
-Then you have two modes:
+Launch Tailscale from Applications, sign in via the menubar icon. Daemon runs automatically on login, reconnects after sleep.
+
+**2. CLI only (headless / servers / if you prefer)**
+
+```bash
+brew install tailscale                  # CLI + daemon
+sudo brew services start tailscale      # daemon doesn't auto-start with this install
+sudo tailscale up                       # sign in (follow the URL it prints)
+```
+
+### Two modes
 
 - **`make share`** — serves the site over your private Tailnet. The test device also needs Tailscale installed and signed into the same account. Fastest + most private.
 - **`make funnel`** — serves the site publicly via [Tailscale Funnel](https://tailscale.com/kb/1223/funnel). Any device can hit the URL without Tailscale. Requires Funnel enabled for your tailnet (see Tailscale admin console).
+
+### First-run gotchas
+
+- **"Serve is not enabled on your tailnet"** — Tailscale prints a URL the first time you run `make share`. Visit it to enable Serve for your tailnet, then re-run the command. One-time setup.
+- **Funnel needs explicit enabling** too, per-machine, in the [Tailscale admin console](https://login.tailscale.com/admin/acls) under ACLs.
 
 Both commands register a temporary `.ddev/config.tailscale.yaml` (gitignored), expose the Vite dev server on port 8443 so HMR works on the test device, and clean up when you hit Ctrl+C.
 
