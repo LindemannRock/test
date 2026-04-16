@@ -1,7 +1,7 @@
 {
-	"name": "craft-starter",
+	"name": "cloud",
 	"version": "1.0.0",
-	"description": "LindemannRock Craft CMS Starter",
+	"description": "craftcloud",
 	"type": "module",
 	"author": {
 		"name": "Bilal Harry Lindemann",
@@ -41,7 +41,6 @@
 		"prettier-plugin-tailwindcss": "^0.7.2",
 		"rimraf": "^6.0.1",
 		"rollup-plugin-copy": "^3.5.0",
-		"rollup-plugin-critical": "^1.0.15",
 		"rollup-plugin-visualizer": "^7.0.1",
 		"svgo": "^4.0.0",
 		"tailwindcss": "^4.1.11",

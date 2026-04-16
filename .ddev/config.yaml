@@ -1,4 +1,4 @@
-name: craft-starter
+name: cloud
 type: craftcms
 docroot: web
 php_version: "8.3"
@@ -9,10 +9,10 @@ additional_fqdns: []
 database:
     type: mysql
     version: "8.0"
-webimage_extra_packages: [build-essential, libvips-dev, libasound2, libatk1.0-0, libcairo2, libgdk-pixbuf-xlib-2.0-0, libgtk-3-0, libnspr4, libpango-1.0-0, libpangocairo-1.0-0, libx11-xcb1, libxcomposite1, libxcursor1, libxdamage1, libxfixes3, libxi6, libxrandr2, libxrender1, libxss1, libxtst6, fonts-liberation, libappindicator3-1, libnss3, xdg-utils]
+webimage_extra_packages: [build-essential, libvips-dev]
 use_dns_when_possible: true
 performance_mode: mutagen
-timezone: Asia/Dubai
+timezone: UTC
 composer_version: "2"
 nodejs_version: "22"
 corepack_enable: false

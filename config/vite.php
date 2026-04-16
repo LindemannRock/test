@@ -24,6 +24,4 @@ return [
     'checkDevServer' => true,
     'includeReactRefreshShim' => false,
     'includeModulePreloadShim' => true,
-    'criticalPath' => Craft::getAlias($distDir) . '/criticalcss',
-    'criticalSuffix' => '_critical.min.css',
 ];
