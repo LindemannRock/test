@@ -236,7 +236,8 @@ async function main() {
 	s.stop('composer.json updated');
 
 	s.start('Updating package.json');
-	updatePackageJson(project, { useCritical });
+	const hasIconManager = [...selectedLr, ...selectedTp].some((pl) => pl.handle === 'icon-manager');
+	updatePackageJson(project, { useCritical, hasIconManager });
 	s.stop('package.json updated');
 
 	s.start('Updating DDEV config');

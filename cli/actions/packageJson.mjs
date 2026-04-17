@@ -25,23 +25,27 @@ function committedDevDep(name) {
 	}
 }
 
-export function updatePackageJson({ name, description }, { useCritical = true } = {}) {
+export function updatePackageJson({ name, description }, { useCritical = true, hasIconManager = false } = {}) {
 	const pkgPath = path.join(ROOT, 'package.json');
 	const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
 	pkg.name = name;
 	pkg.description = description || '';
 
 	pkg.devDependencies ??= {};
-	if (useCritical) {
-		// Idempotent — add back if a previous run removed it.
-		// Prefer the version committed in git, fall back to whatever's already here.
-		const version = pkg.devDependencies['rollup-plugin-critical']
-			|| committedDevDep('rollup-plugin-critical')
-			|| '*';
-		pkg.devDependencies['rollup-plugin-critical'] = version;
-	} else {
-		delete pkg.devDependencies['rollup-plugin-critical'];
-	}
+
+	toggleDevDep(pkg, 'rollup-plugin-critical', useCritical);
+	toggleDevDep(pkg, 'svgo', hasIconManager);
 
 	fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, '\t') + '\n');
+}
+
+function toggleDevDep(pkg, name, keep) {
+	if (keep) {
+		const version = pkg.devDependencies[name]
+			|| committedDevDep(name)
+			|| '*';
+		pkg.devDependencies[name] = version;
+	} else {
+		delete pkg.devDependencies[name];
+	}
 }

@@ -42,6 +42,7 @@
 		"rollup-plugin-copy": "^3.5.0",
 		"rollup-plugin-critical": "^1.0.15",
 		"rollup-plugin-visualizer": "^7.0.1",
+		"svgo": "^4.0.0",
 		"tailwindcss": "^4.1.11",
 		"terser": "^5.43.1",
 		"typescript": "^6.0.2",
