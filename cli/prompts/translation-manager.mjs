@@ -12,12 +12,12 @@ import { cancel } from '../utils/cancel.mjs';
 export async function promptTranslationCategory() {
 	p.log.info('Translation Manager uses a category name for translations.\n' +
 		'This maps to filenames in translations/{lang}/{category}.php\n' +
-		'and is used in Twig: {{ "Hello"|t("site") }}');
+		'and is used in Twig: {{ "Hello"|t("messages") }}');
 
 	const category = await p.text({
 		message: 'Translation category',
-		placeholder: 'site',
-		initialValue: 'site',
+		placeholder: 'messages',
+		initialValue: 'messages',
 		validate: (v) => {
 			if (!v) return 'Category name is required';
 			if (!/^[a-z0-9-]+$/.test(v)) return 'Use lowercase letters, numbers, and hyphens only';
