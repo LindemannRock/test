@@ -67,9 +67,12 @@ REDIS_HOST=your-redis-host
 REDIS_PORT=6379
 REDIS_PASSWORD=your-redis-password
 REDIS_DATABASE=0
+REDIS_SESSION_DB=1          # only if you opted into Redis sessions during make create
 ```
 
-Without Redis, Craft falls back to its default file-based cache — no config needed.
+Without Redis, Craft falls back to its default file-based cache + DB-backed sessions — no config needed.
+
+**Servd note:** Servd auto-configures Redis for cache + sessions at deploy time, overriding your `app.php`. You do not need to set `REDIS_*` vars in the Servd dashboard.
 
 ## Servd hosting
 

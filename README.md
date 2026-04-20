@@ -31,11 +31,11 @@ An opinionated, interactive Craft CMS 5 starter. Run `make create`, answer a few
 - **Auto-generated credentials** — Craft security key, app ID, and LR plugin IP salts generated locally, never committed
 - **Multi-hosting ready** — Servd, Craft Cloud, or self-hosted with plugin-level conditionals
 - **Email transport configured automatically** — Postmark, SMTP (Servd SMTP, Mailgun, etc.), or Mailpit as a safe dev default; written to project config so the CP shows the right value and Servd's sendmail alert never fires
-- **Redis opt-in** — adds `ddev/ddev-redis` addon + `yii2-redis` package + `cache` component override in one choice
+- **Redis opt-in** — cache + optional sessions. Adds `ddev/ddev-redis` addon + `yii2-redis` package, env-var-gated components in `app.php` (DB 0 for cache, DB 1 for sessions). Each Redis feature prompted separately
 - **Critical CSS opt-in** — slow builds (Chromium-based) are off by default; `make prod` is fast, `make critical` generates above-the-fold CSS when you need it. Declining removes `rollup-plugin-critical` + ~20 Chromium apt packages from DDEV
 - **Multi-site support** — 1 to N sites with per-site language, URL prefix, name, and RTL detection. Sites created via Craft's project-config API, translation files scaffolded per locale, favicon generation with per-site web manifests
 - **Vite 8 build pipeline** — Rolldown-powered (10-30× faster), single `web/dist/` output, Subresource Integrity (SRI), gzip compression, page-specific asset splitting. For per-environment runtime config (Algolia keys, Mapbox tokens, etc.) inject from Twig into `window.__APP_CONFIG__` — do **not** rely on `import.meta.env.VITE_*` baking values into the bundle.
-- **TypeScript-first frontend** — Alpine.js session/UTM store, lazy-loaded Swiper + mmenu + Alpine plugins
+- **TypeScript-first frontend** — Alpine.js session/UTM store, lazy-loaded Swiper + mmenu, conditional `svgo` (with Icon Manager)
 - **Tailwind CSS 4 (CSS-first)** — no `tailwind.config.*` file, theme in `src/css/global.css` via `@theme`
 - **Template hierarchy** — `_boilerplate → base-web → base-html → base → header/footer` with an entry router pattern (`_routerEntries.twig`)
 - **release-please** automated versioning via conventional commits
@@ -121,6 +121,7 @@ Three commands open interactive pickers so you don't have to remember sub-target
 | `make update`           | Interactive picker — Craft / Composer / Frontend / CLI / All |
 | `make registry`         | Maintain the plugin list offered by `make create` (check / update / add / fetch configs) |
 | `make db`               | Database picker — pull from Servd / export / import        |
+| `make verify`           | Scan `.env` for unfilled `# TODO:` placeholders (run before deploy) |
 | `make clean`            | Remove vendor & node_modules then reinstall                |
 | `make clean-logs`       | Remove `storage/logs/*.log`                                |
 | `make reindex-search`   | Rebuild the search index                                   |
@@ -223,7 +224,7 @@ craft-starter/
 | [Formie REST API](https://github.com/LindemannRock/craft-formie-rest-api) | REST + GraphQL API for Formie |
 | [Formie SAP Integration](https://github.com/LindemannRock/craft-formie-sap-integration) | Send Formie submissions to SAP Cloud |
 | [Formie SMS](https://github.com/LindemannRock/craft-formie-sms) | SMS notifications for Formie (auto-adds SMS Manager) |
-| [Icon Manager](https://github.com/LindemannRock/craft-icon-manager) | SVG + icon font management |
+| [Icon Manager](https://github.com/LindemannRock/craft-icon-manager) | SVG + icon font management (auto-adds `svgo` devDependency for advanced SVG optimization) |
 | [Logging Library](https://github.com/LindemannRock/craft-logging-library) | Centralized logging |
 | [Redirect Manager](https://github.com/LindemannRock/craft-redirect-manager) | Auto-redirects + privacy-preserving analytics |
 | [Report Manager](https://github.com/LindemannRock/craft-report-manager) | Report generation + analytics |
@@ -231,7 +232,7 @@ craft-starter/
 | [Shortlink Manager](https://github.com/LindemannRock/craft-shortlink-manager) | Short links with QR codes + analytics |
 | [Smartlink Manager](https://github.com/LindemannRock/craft-smartlink-manager) | Device-aware smart links |
 | [SMS Manager](https://github.com/LindemannRock/craft-sms-manager) | SMS gateway (multi-provider) |
-| [Translation Manager](https://github.com/LindemannRock/craft-translation-manager) | Translation management (prompts for category name during `make create`) |
+| [Translation Manager](https://github.com/LindemannRock/craft-translation-manager) | Translation management (prompts for category name, default `messages`) |
 
 ### Third-party (opt-in during `make create`)
 
@@ -348,12 +349,15 @@ The installer tailors the project to your selections so you don't end up with de
 
 ### Redis
 
-- **Enabled** → `ddev/ddev-redis` addon installed before `ddev start`, `yiisoft/yii2-redis` added to composer, Redis env vars kept in `.env`, cache component override wired up
-- **Disabled** → Craft's default file-based cache, Redis env vars stripped from `.env`
+- **Cache enabled** → `ddev/ddev-redis` addon installed before `ddev start`, `yiisoft/yii2-redis` added to composer, Redis env vars kept in `.env`, cache component uses Redis DB 0
+- **Sessions enabled** (sub-prompt, only shown when cache is on) → `REDIS_SESSION_DB=1` added to `.env`, session component switches to `yii\redis\Session` with its own Redis DB
+- **Disabled** → Craft's default file-based cache + DB-backed sessions, Redis env vars stripped from `.env`
+- **Servd note:** Servd auto-configures Redis for cache + sessions at deploy time, overriding your `app.php`. Your local config is for DDEV / self-hosted / Craft Cloud only
+- **DB allocation:** DB 0 = cache, DB 1 = sessions. Plugins (e.g. Search Manager) manage their own DB indices
 
 ### Hosting
 
-- **Servd** → `servd/craft-asset-storage` installed, credentials + base URL prompted, optional custom CDN/image-transform domains, `SERVD_BASE_URL` auto-derived from project slug. Servd sub-prompt also offers Postmark/SMTP as email fallback
+- **Servd** → `servd/craft-asset-storage` installed, credentials + base URL prompted (or scaffolded as `# TODO:` placeholders if you don't have them yet — run `make verify` before deploy), optional custom CDN/image-transform domains, `SERVD_BASE_URL` auto-derived from project slug. Servd sub-prompt also offers Postmark/SMTP as email fallback
 - **Craft Cloud** → `craftcms/cloud` installed, `craft-cloud.yaml` generated (PHP 8.3, Node 22, `npm run build`), `CRAFT_RUN_QUEUE_AUTOMATICALLY=false` (Cloud runs its own workers)
 - **None / self-hosted** → no hosting plugin, Servd section removed from `.env`
 
