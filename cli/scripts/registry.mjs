@@ -27,7 +27,6 @@ const RESOURCES = [
 			{ value: 'update', label: 'Update versions', hint: 'apply bumps (major bumps confirmed)' },
 			{ value: 'add',    label: 'Add a plugin',    hint: 'search Packagist + add to registry' },
 			{ value: 'fetch',  label: 'Fetch configs',   hint: 'pull default config.php from GitHub' },
-			{ value: 'cancel', label: pc.red('Cancel') },
 		],
 	},
 	// Future: { value: 'themes', label: 'Themes', actions: [...] },
@@ -44,33 +43,43 @@ async function main() {
 	p.intro(pc.bgCyan(pc.black(' Registry ')));
 	p.log.info('Starter-maintenance tool — manages data that drives ' + pc.bold('make create') + '.');
 
-	// If there's only one resource, skip the first picker
-	let resource;
-	if (RESOURCES.length === 1) {
-		resource = RESOURCES[0];
-	} else {
-		const choice = await p.select({
-			message: 'Which registry?',
-			options: RESOURCES.map(({ value, label, hint }) => ({ value, label, hint })),
+	while (true) {
+		// If there's only one resource, skip the first picker
+		let resource;
+		if (RESOURCES.length === 1) {
+			resource = RESOURCES[0];
+		} else {
+			const choice = await p.select({
+				message: 'Which registry?',
+				options: [
+					...RESOURCES.map(({ value, label, hint }) => ({ value, label, hint })),
+					{ value: 'cancel', label: pc.red('Cancel') },
+				],
+			});
+			if (p.isCancel(choice) || choice === 'cancel') cancel();
+			resource = RESOURCES.find((r) => r.value === choice);
+		}
+
+		const action = await p.select({
+			message: `${resource.label} — what would you like to do?`,
+			options: [
+				...resource.actions,
+				{ value: 'back', label: pc.dim('← Back') },
+			],
 		});
-		if (p.isCancel(choice)) cancel();
-		resource = RESOURCES.find((r) => r.value === choice);
-	}
+		if (p.isCancel(action) || action === 'cancel') cancel();
+		if (action === 'back') continue;
 
-	const action = await p.select({
-		message: `${resource.label} — what would you like to do?`,
-		options: resource.actions,
-	});
-	if (p.isCancel(action) || action === 'cancel') cancel();
-
-	const target = `registry-${resource.value}-${action}`;
-	p.log.step(`make ${target}`);
-	const code = await runShell('make', [target]);
-	if (code !== 0) {
-		p.outro(pc.red('Command failed — see output above.'));
-		process.exit(0);
+		const target = `registry-${resource.value}-${action}`;
+		p.log.step(`make ${target}`);
+		const code = await runShell('make', [target]);
+		if (code !== 0) {
+			p.outro(pc.red('Command failed — see output above.'));
+			process.exit(0);
+		}
+		p.outro(pc.green('Done.'));
+		break;
 	}
-	p.outro(pc.green('Done.'));
 }
 
 main().catch((err) => {

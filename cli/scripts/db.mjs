@@ -63,26 +63,6 @@ function validatePath(v) {
 	if (/[\r\n\0]/.test(v)) return 'No control characters';
 }
 
-async function pickExportFile() {
-	const kind = await p.select({
-		message: 'What kind of export?',
-		options: [
-			{ value: 'working', label: 'Working dump', hint: `${WORKING_FILE} — git-ignored` },
-			{ value: 'seed',    label: 'Seed DB',      hint: `${SEED_FILE} — committed to git` },
-		],
-	});
-	if (p.isCancel(kind)) cancel();
-	const defaultName = kind === 'seed' ? SEED_FILE : WORKING_FILE;
-
-	const file = await p.text({
-		message: 'Output file path',
-		placeholder: defaultName,
-		defaultValue: defaultName,
-		validate: validatePath,
-	});
-	if (p.isCancel(file)) cancel();
-	return file || defaultName;
-}
 
 async function pickImportFile() {
 	const file = await p.text({
@@ -99,41 +79,63 @@ async function main() {
 	p.intro(pc.bgCyan(pc.black(' Database ')));
 	requireProject();
 
-	const action = await p.select({
-		message: 'What would you like to do?',
-		options: buildActions(),
-	});
-	if (p.isCancel(action) || action === 'cancel') cancel();
-
-	const args = [`db-${action}`];
-
-	if (action === 'export') {
-		const file = await pickExportFile();
-		args.push(`file=${file}`);
-	} else if (action === 'import') {
-		const file = await pickImportFile();
-		if (!fs.existsSync(file)) {
-			p.log.error(`File not found: ${file}`);
-			process.exit(1);
-		}
-		args.push(`file=${file}`);
-	}
-
-	if (action === 'pull') {
-		const confirm = await p.confirm({
-			message: 'This will overwrite your local database. Continue?',
-			initialValue: false,
+	while (true) {
+		const action = await p.select({
+			message: 'What would you like to do?',
+			options: buildActions(),
 		});
-		if (p.isCancel(confirm) || !confirm) cancel('Cancelled.');
-	}
+		if (p.isCancel(action) || action === 'cancel') cancel();
 
-	p.log.step(`make ${args.join(' ')}`);
-	const code = await runShell('make', args);
-	if (code !== 0) {
-		p.outro(pc.red('Command failed — see output above.'));
-		process.exit(0);
+		const args = [`db-${action}`];
+		let goBack = false;
+
+		if (action === 'export') {
+			const kind = await p.select({
+				message: 'What kind of export?',
+				options: [
+					{ value: 'working', label: 'Working dump', hint: `${WORKING_FILE} — git-ignored` },
+					{ value: 'seed',    label: 'Seed DB',      hint: `${SEED_FILE} — committed to git` },
+					{ value: 'back',    label: pc.dim('← Back') },
+				],
+			});
+			if (p.isCancel(kind)) cancel();
+			if (kind === 'back') continue;
+			const defaultName = kind === 'seed' ? SEED_FILE : WORKING_FILE;
+
+			const file = await p.text({
+				message: 'Output file path',
+				placeholder: defaultName,
+				defaultValue: defaultName,
+				validate: validatePath,
+			});
+			if (p.isCancel(file)) cancel();
+			args.push(`file=${file || defaultName}`);
+		} else if (action === 'import') {
+			const file = await pickImportFile();
+			if (!fs.existsSync(file)) {
+				p.log.error(`File not found: ${file}`);
+				process.exit(1);
+			}
+			args.push(`file=${file}`);
+		}
+
+		if (action === 'pull') {
+			const confirm = await p.confirm({
+				message: 'This will overwrite your local database. Continue?',
+				initialValue: false,
+			});
+			if (p.isCancel(confirm) || !confirm) cancel('Cancelled.');
+		}
+
+		p.log.step(`make ${args.join(' ')}`);
+		const code = await runShell('make', args);
+		if (code !== 0) {
+			p.outro(pc.red('Command failed — see output above.'));
+			process.exit(0);
+		}
+		p.outro(pc.green('Done.'));
+		break;
 	}
-	p.outro(pc.green('Done.'));
 }
 
 main().catch((err) => {
