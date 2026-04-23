@@ -21,3 +21,15 @@ web_environment:
 upload_dirs:
     - web/assets
     - storage
+hooks:
+    post-start:
+        - exec: |
+              if [ ! -f /var/www/html/.env ]; then
+                echo ""
+                echo "=============================================="
+                echo "  No .env found."
+                echo "  Run 'make create' on the host to set up"
+                echo "  the project interactively."
+                echo "=============================================="
+                echo ""
+              fi
