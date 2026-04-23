@@ -308,7 +308,7 @@ nuke: ## Destroy DDEV + vendor + node_modules + dist + config/project + .env
 	@for f in cli/templates/plugins/*.php; do rm -f "config/$$(basename $$f)" 2>/dev/null; done
 	@# Remove DDEV generated artifacts
 	@rm -rf .ddev/addon-metadata/redis .ddev/docker-compose.redis.yaml .ddev/redis 2>/dev/null || true
-	@rm -rf .ddev/traefik/certs .ddev/traefik/config 2>/dev/null || true
+	@rm -rf .ddev/traefik/certs .ddev/traefik/config .ddev/config.tailscale.yaml 2>/dev/null || true
 	@# Restore files the CLI may have modified during `make create`:
 	@# - .ddev/config.yaml: name, timezone, webimage_extra_packages (Chromium deps)
 	@# - .ddev/config.m1.yaml: deleted when critical CSS was declined
