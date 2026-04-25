@@ -11,10 +11,13 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"update": "npm-check --update"
 	},
 	"devDependencies": {
-		"npm-check": "^6.0.1"
+		"npm-check": "^6.0.1",
+		"vitest": "^4.1.5"
 	},
 	"dependencies": {
 		"@clack/prompts": "^1.2.0",
