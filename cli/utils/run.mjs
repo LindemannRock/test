@@ -20,7 +20,7 @@ import { ROOT } from '../paths.mjs';
 // (`--password 'secret'`) forms, quoted or unquoted.
 const SECRET_FLAGS = ['--password', '--token', '--secret', '--api-key', '--key'];
 
-function redactSecrets(text) {
+export function redactSecrets(text) {
 	let redacted = String(text);
 	for (const flag of SECRET_FLAGS) {
 		// --flag=value or --flag='value' or --flag="value"

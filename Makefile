@@ -1,4 +1,4 @@
-.PHONY: help create install start dev prod critical favicons reset nuke \
+.PHONY: help create install start dev test prod critical favicons reset nuke \
 	clean clean-logs update update-craft update-composer update-npm update-cli \
 	registry registry-plugins-check registry-plugins-update registry-plugins-add registry-plugins-fetch \
 	up npm-install kill-vite \
@@ -125,6 +125,9 @@ npm-install: ## Run `npm install` inside DDEV
 
 dev: ## Start Vite dev server (HMR)
 	@$(call require_project, ddev exec npm run dev)
+
+test: ## Run CLI unit tests (vitest)
+	@cd cli && npx vitest run
 
 prod: ## Production build (fast — skips critical CSS)
 	@$(call require_project, ddev exec env GENERATE_CRITICAL_CSS=false npm run build)
