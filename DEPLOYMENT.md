@@ -2,6 +2,13 @@
 
 This starter is configured for **local development with DDEV**. For staging and production, set environment variables through your hosting provider's dashboard (Servd, Craft Cloud, Vercel, etc.) rather than committing a `.env` file.
 
+## Before first deploy
+
+- [ ] Run `make verify` — scans `.env` for unfilled `# TODO:` placeholders (e.g. Servd credentials you skipped during `make create`)
+- [ ] Commit `composer.lock` + `package-lock.json` — the CLI un-gitignores them during `make create` for reproducible installs. Craft Cloud and most CI pipelines require them
+- [ ] Run `make prod` (or `make critical` if critical CSS is enabled) — builds frontend assets to `web/dist/`
+- [ ] Verify `storage/rebrand/` is committed — contains CP login branding (logo + site icon)
+
 ## Required environment variables
 
 These must be set for any non-local environment. Missing values will crash Craft on boot.
@@ -18,6 +25,22 @@ These must be set for any non-local environment. Missing values will crash Craft
 | `PRIMARY_SITE_URL` | Public site URL (e.g. `https://example.com`) |
 | `SYSTEM_EMAIL` | Outgoing email address |
 | `SYSTEM_NAME` | Site name shown in emails and CP |
+
+### Multi-site projects
+
+For each site beyond the primary, set per-site env vars matching the handles chosen during `make create`:
+
+```
+PRIMARY_SITE_URL_EN=https://example.com/
+PRIMARY_SITE_NAME_EN="My Site"
+PRIMARY_SITE_LABEL_EN="English"
+
+PRIMARY_SITE_URL_AR=https://example.com/ar/
+PRIMARY_SITE_NAME_AR="موقعي"
+PRIMARY_SITE_LABEL_AR="العربية"
+```
+
+The handle is uppercased (`en` → `_EN`). These are referenced by Craft's project config as `$PRIMARY_SITE_URL_EN` etc.
 
 ## Values that change per environment
 
@@ -58,19 +81,21 @@ SMTP_USERNAME=your-username
 SMTP_PASSWORD=your-password
 ```
 
-## Caching
+## Caching & sessions
 
-If Redis was enabled during setup, set these for staging/production:
+`config/app.php` configures Redis for cache and sessions, gated by env vars. If the env vars are absent, Craft falls back to file-based cache and DB-backed sessions.
+
+### Redis (when enabled during `make create`)
 
 ```
 REDIS_HOST=your-redis-host
 REDIS_PORT=6379
 REDIS_PASSWORD=your-redis-password
 REDIS_DATABASE=0
-REDIS_SESSION_DB=1          # only if you opted into Redis sessions during make create
+REDIS_SESSION_DB=1          # only if you opted into Redis sessions
 ```
 
-Without Redis, Craft falls back to its default file-based cache + DB-backed sessions — no config needed.
+**DB allocation:** DB 0 = cache, DB 1 = sessions. Plugins (e.g. Search Manager) manage their own indices.
 
 **Servd note:** Servd auto-configures Redis for cache + sessions at deploy time, overriding your `app.php`. You do not need to set `REDIS_*` vars in the Servd dashboard.
 
@@ -92,6 +117,19 @@ If you configured custom asset domains during `make create`:
 SERVD_CDN_URL_PATTERN='https://media.example.com/{{environment}}/{{subfolder}}/{{filePath}}'
 SERVD_IMAGE_TRANSFORM_URL_PATTERN='https://images.example.com/{{environment}}/{{subfolder}}/{{filePath}}{{params}}'
 ```
+
+### Servd build step
+
+Servd can run a Node build step during deployment. In your Servd project settings → Build:
+
+- **Command:** `npm run build`
+- **Node version:** `22`
+
+If you build locally and commit `web/dist/` instead, leave the command empty.
+
+### Servd and Redis
+
+Servd provides Redis automatically — no setup needed. Cache, sessions, and queue are all handled by Servd's infrastructure, overriding your `app.php` at deploy time.
 
 ## Craft Cloud
 
@@ -150,4 +188,25 @@ Servd doesn't support Sendmail. Set either `POSTMARK_TOKEN` (install the Postmar
 
 ### Redis connection refused
 
-The `yiisoft/yii2-redis` package is installed but `REDIS_HOST` isn't set (or can't connect). Either add the Redis env vars or remove the package from `composer.json` to use Craft's default file cache.
+The `yiisoft/yii2-redis` package is installed but `REDIS_HOST` isn't set (or can't connect). Cache and session components in `app.php` are env-var-gated — if `REDIS_HOST` is absent, they fall back to file cache and DB sessions automatically. If you're seeing this error, check that `REDIS_HOST` is set correctly in your hosting dashboard.
+
+**Servd users:** you should NOT see this error — Servd auto-configures Redis. If you do, contact Servd support.
+
+### Unfilled placeholders in .env
+
+Run `make verify` to scan for `# TODO:` markers left by the CLI when you skipped Servd credentials during `make create`. Fill them in before deploying.
+
+### Lock files missing (Craft Cloud)
+
+Craft Cloud requires `composer.lock` and `package-lock.json` to be committed. The CLI automatically un-gitignores them during `make create`. If your deploy fails with "composer.lock not found", verify they're tracked:
+
+```bash
+git ls-files composer.lock package-lock.json
+```
+
+If empty, the lock files were gitignored. Remove them from `.gitignore` and commit:
+
+```bash
+git add composer.lock package-lock.json
+git commit -m "chore: commit lock files for deploy"
+```
