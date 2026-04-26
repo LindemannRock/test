@@ -51,7 +51,7 @@ An opinionated, interactive Craft CMS 5 starter. Run `make create`, answer a few
 
 ### Optional
 
-- [Tailscale](https://tailscale.com) — only if you want `make share` / `make funnel` for device testing. Free for personal use. See the [Device testing](#device-testing) section below for install details (app cask vs. CLI).
+- [Tailscale](https://tailscale.com) — only if you want `make share` / `make funnel` for device testing. Free for personal use. See the [Device testing (Tailscale)](#device-testing-tailscale) section below for install details (app cask vs. CLI).
 
 > The `make create` installer checks that Docker, DDEV, and Node are present before running. If any are missing you'll get a clean error with install links.
 
@@ -182,35 +182,19 @@ Most project configuration is handled automatically. A few things are still manu
 
 ```
 craft-starter/
-├── cli/                   Interactive installer (Node ESM)
-│   ├── setup.mjs          Orchestrator for `make create`
-│   ├── config/            Static data (plugin registry, languages)
-│   ├── prompts/           @clack/prompts + @inquirer/search flows
-│   ├── actions/           File mutations (composer, env, ddev, critical, plugins, sites)
-│   ├── utils/             Shared helpers (run, crypto, cancel, validate, preflight)
-│   ├── scripts/           Standalone scripts (PHP via DDEV, Node on host):
-│   │                      configure-project.php, generate-favicons.mjs,
-│   │                      add-plugin.mjs, check-plugin-versions.mjs,
-│   │                      fetch-plugin-configs.mjs, update.mjs, registry.mjs, db.mjs
-│   └── templates/         Source files copied/read by the CLI
-│       ├── env.example    The .env template
-│       ├── plugins/       Per-plugin config.php templates
-│       ├── translations/  Translation scaffold (copied per site/locale)
-│       ├── rebrand/       CP rebrand assets (login logo + site icon)
-│       └── critical/      Canonical critical-CSS variants (enabled/disabled
-│                          partials + Apple Silicon config.m1.yaml) — used for
-│                          round-trip correctness if a project commits a
-│                          declined state and later flips back
-├── config/
-│   ├── app.php            Only the `cache` component override
-│   ├── general.php        Project-wide constants (no env-overridable settings — use CRAFT_* in .env)
-│   ├── project/           Craft's project config (auto-generated)
-│   └── vite.php           nystudio107/craft-vite config
+├── cli/                   Interactive installer (Node ESM — prompts, actions,
+│   │                      scripts, tests, templates)
+│   └── templates/         Source files: env.example, plugin configs, translations,
+│                          rebrand assets, critical-CSS variants
+├── config/                Craft config (app.php, general.php, vite.php, routes.php)
 ├── src/                   Frontend: css, js, brand, cp, fonts, icons, img
+├── storage/               Craft runtime (own .gitignore — only rebrand/ committed)
 ├── templates/             Twig templates (_boilerplate → base → pages)
 ├── translations/          Per-locale site translations (scaffolded per site)
-├── web/                   Public web root (index.php)
-├── Makefile               DX entry point
+├── web/                   Public web root
+├── .ddev/                 DDEV config + custom commands
+├── .github/               release-please workflow
+├── Makefile               DX entry point (run make help)
 └── DEPLOYMENT.md          Per-environment config reference
 ```
 
