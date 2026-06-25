@@ -1,6 +1,6 @@
 # Changelog
 
-## [5.11.0](https://github.com/LindemannRock/test/compare/v5.10.0...v5.11.0) (2026-06-25)
+## [5.11.0](https://github.com/LindemannRock/test/compare/v5.10.0...v5.11.0) - 2026-06-25
 
 
 ### Added
