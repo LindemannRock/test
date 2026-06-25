@@ -1,5 +1,37 @@
 # Changelog
 
+## [5.11.0](https://github.com/LindemannRock/test/compare/v5.10.0...v5.11.0) (2026-06-25)
+
+
+### Added
+
+* **cli:** add build artifact tracking prompt and update gitignore handling ([00bd5cf](https://github.com/LindemannRock/test/commit/00bd5cf226fe9b8eeae9302f4fda6d5b376a3917))
+* **cli:** add review link for major updates in plugin version check ([e9fc09a](https://github.com/LindemannRock/test/commit/e9fc09a110d27457ad0e1000939239cb20e763c8))
+* **cli:** add validation for site handles and URL prefix generation ([2b2e3a8](https://github.com/LindemannRock/test/commit/2b2e3a8afe8db8e04e1b23adc378a67878a14224))
+* **cli:** enhance defaultLabel function to preserve region codes ([4fcecda](https://github.com/LindemannRock/test/commit/4fcecda9d13e1f3d58c8d74ba4907751fab359fe))
+* **cli:** enhance plugin version check with detailed release URLs ([6e51767](https://github.com/LindemannRock/test/commit/6e51767516231505fdb088285713790e05c537bc))
+* **cli:** integrate database prompt into project setup flow ([1dbf37c](https://github.com/LindemannRock/test/commit/1dbf37caaa0b43cb7432574ce3c4e50333602709))
+* **cli:** warn about major updates requiring review during plugin check ([ada1b43](https://github.com/LindemannRock/test/commit/ada1b43fba6c761d2b2800f60a95239b616bb7e9))
+* **database:** add support for database schema configuration ([ab5284b](https://github.com/LindemannRock/test/commit/ab5284ba8ff3abc2cba3ab0b62d560e2665507e6))
+* **database:** add support for MySQL 8.0 and PostgreSQL 16 ([42257d7](https://github.com/LindemannRock/test/commit/42257d72165ade6c35112576d90d6e5c0eaecd47))
+* **database:** add support for PostgreSQL 18 alongside PostgreSQL 16 ([d838ab4](https://github.com/LindemannRock/test/commit/d838ab46a7c71bf14de2376216ab5b979b9bd454))
+* **i18n:** add English as a common language option ([d4eff45](https://github.com/LindemannRock/test/commit/d4eff4539b1403ba2c56f4f29e5f89abd0eb543e))
+* **plugins:** add Craft Commerce plugin for e-commerce functionality ([f3119e5](https://github.com/LindemannRock/test/commit/f3119e5a770ec3bdae2d48bbd48a6a3eed0f3929))
+* **plugins:** add Freeform plugin for flexible form building ([c26cc58](https://github.com/LindemannRock/test/commit/c26cc58cd1d8be0b36b0b6b1fb7fb13e73d05f0a))
+
+
+### Fixed
+
+* **ci:** align release-please with unprefixed tags ([9b3efe7](https://github.com/LindemannRock/test/commit/9b3efe747826cef91543dc0e440191b054908345))
+* **cli:** correct asset storage package name in database script ([36d9029](https://github.com/LindemannRock/test/commit/36d90295cfc520bf3f55bf510ccf3752b3d70400))
+* **cli:** remove success log for no available updates ([f733e64](https://github.com/LindemannRock/test/commit/f733e64a52087ee5010a493f607cc45a0ad449a5))
+* **cli:** update craftcms/cms version to ^5.10.4 ([0fec116](https://github.com/LindemannRock/test/commit/0fec11612e70ebaa46c7ac36b2ccf1ce16d41183))
+* **cli:** update hint for Composer packages in update picker ([4a2a5c2](https://github.com/LindemannRock/test/commit/4a2a5c29437bab48ea12cbfb885018173b285ed2))
+* **cli:** update package selection label to include full name ([b1a1880](https://github.com/LindemannRock/test/commit/b1a1880b54ff753690a188b9d4e9385926f7c62d))
+* **cli:** update plugin label for clarity in registry picker ([8e845f1](https://github.com/LindemannRock/test/commit/8e845f15122efa8a817576ec2574bbe963b99e09))
+* component field to release-please configuration ([90f02d0](https://github.com/LindemannRock/test/commit/90f02d088fad0e3d924fb125791cd01d9f399453))
+* **plugins:** update Craft CMS and plugin versions for compatibility ([0c28e2f](https://github.com/LindemannRock/test/commit/0c28e2f69c5af7d57a8ea6c5aaadfc2d392e7a2d))
+
 ## [5.10.0](https://github.com/LindemannRock/craft-starter/compare/v5.9.0...v5.10.0) - 2026-06-25
 
 
